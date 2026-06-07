@@ -1,9 +1,0 @@
-from .settings import (
-    API_ID,
-    API_HASH,
-    CANAIS,
-    WHATSAPP_PHONE,
-    CALLMEBOT_APIKEY,
-    PALAVRAS_CHAVE,
-    TEMPO_MINIMO_ENTRE_MENSAGENS,
-)

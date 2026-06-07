@@ -1,15 +1,41 @@
-node_modules
+# Dependencies
+node_modules/
+
+# Build
+dist/
+
+# Environment
 .env
+
+# Database
+data/*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+logs/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Session
+session.session
+session.session-journal
+
+# Vercel
 .vercel
 
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-venv/
-env/
-ENV/
-*.session
-*.session-journal
+# Railway
+.railway
+
+# Test
+coverage/
+.nyc_output/
