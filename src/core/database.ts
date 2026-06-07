@@ -1,4 +1,5 @@
-import Database from 'better-sqlite3';
+import sqlite3 from 'sqlite3';
+import { open, Database } from 'sqlite';
 import { config } from './config.js';
 import * as logger from './logger.js';
 import fs from 'fs';
@@ -9,13 +10,23 @@ if (!fs.existsSync(dbDir)) {
   fs.mkdirSync(dbDir, { recursive: true });
 }
 
-export const db = new Database(config.DATABASE_PATH);
-db.pragma('journal_mode = WAL');
+let db: Database<sqlite3.Database, sqlite3.Statement>;
 
-const createTables = (): void => {
+export const getDb = async (): Promise<Database<sqlite3.Database, sqlite3.Statement>> => {
+  if (!db) {
+    db = await open({
+      filename: config.DATABASE_PATH,
+      driver: sqlite3.Database
+    });
+  }
+  return db;
+};
+
+const createTables = async (): Promise<void> => {
+  const database = await getDb();
   logger.info('Criando tabelas do banco de dados...', 'Database');
 
-  db.exec(`
+  await database.exec(`
     CREATE TABLE IF NOT EXISTS telegram_config (
       id INTEGER PRIMARY KEY CHECK (id = 1),
       api_id TEXT,
@@ -90,8 +101,9 @@ const createTables = (): void => {
   logger.info('Tabelas criadas com sucesso!', 'Database');
 };
 
-const createIndexes = (): void => {
-  db.exec(`
+const createIndexes = async (): Promise<void> => {
+  const database = await getDb();
+  await database.exec(`
     CREATE INDEX IF NOT EXISTS idx_sent_link ON sent_messages(link);
     CREATE INDEX IF NOT EXISTS idx_sent_product ON sent_messages(product);
     CREATE INDEX IF NOT EXISTS idx_sent_time ON sent_messages(sent_at);
@@ -101,10 +113,10 @@ const createIndexes = (): void => {
   `);
 };
 
-export const initDatabase = (): void => {
+export const initDatabase = async (): Promise<void> => {
   try {
-    createTables();
-    createIndexes();
+    await createTables();
+    await createIndexes();
     logger.info('Banco de dados inicializado!', 'Database');
   } catch (err) {
     logger.error(`Erro ao inicializar banco: ${err}`, 'Database');
@@ -112,19 +124,20 @@ export const initDatabase = (): void => {
   }
 };
 
-export const seedDatabase = (): void => {
+export const seedDatabase = async (): Promise<void> => {
+  const database = await getDb();
   logger.info('Verificando seed...', 'Database');
 
-  const configCount = db.prepare('SELECT COUNT(*) as count FROM telegram_config').get() as { count: number };
-  if (configCount.count === 0) {
+  const configRow = await database.get('SELECT COUNT(*) as count FROM telegram_config');
+  if (configRow.count === 0) {
     logger.info('Inserindo configuração inicial...', 'Database');
-    db.prepare(`
+    await database.run(`
       INSERT INTO telegram_config (id, api_id, api_hash, phone, is_connected)
       VALUES (1, '', '', '', 0)
-    `).run();
+    `);
   }
 
-  const channelCount = db.prepare('SELECT COUNT(*) as count FROM channels').get() as { count: number };
+  const channelCount = await database.get('SELECT COUNT(*) as count FROM channels');
   if (channelCount.count === 0) {
     logger.info('Inserindo canais padrão...', 'Database');
     const channels = [
@@ -137,17 +150,16 @@ export const seedDatabase = (): void => {
       '@pcdorafa'
     ];
 
-    const stmt = db.prepare('INSERT INTO channels (username, is_active) VALUES (?, 1)');
     for (const channel of channels) {
       try {
-        stmt.run(channel);
+        await database.run('INSERT INTO channels (username, is_active) VALUES (?, 1)', channel);
       } catch {
         // Ignora duplicatas
       }
     }
   }
 
-  const categoryCount = db.prepare('SELECT COUNT(*) as count FROM categories').get() as { count: number };
+  const categoryCount = await database.get('SELECT COUNT(*) as count FROM categories');
   if (categoryCount.count === 0) {
     logger.info('Inserindo categorias e filtros padrão...', 'Database');
 
@@ -156,9 +168,17 @@ export const seedDatabase = (): void => {
       { name: '🎮 Hardware', color: '#ef4444', icon: '🎮' }
     ];
 
-    const catStmt = db.prepare('INSERT INTO categories (name, color, icon, sort_order) VALUES (?, ?, ?, ?)');
-    const celularesId = Number(catStmt.run(categories[0].name, categories[0].color, categories[0].icon, 0).lastInsertRowid);
-    const hardwareId = Number(catStmt.run(categories[1].name, categories[1].color, categories[1].icon, 1).lastInsertRowid);
+    const celularesResult = await database.run(
+      'INSERT INTO categories (name, color, icon, sort_order) VALUES (?, ?, ?, ?)',
+      categories[0].name, categories[0].color, categories[0].icon, 0
+    );
+    const celularesId = celularesResult.lastID;
+
+    const hardwareResult = await database.run(
+      'INSERT INTO categories (name, color, icon, sort_order) VALUES (?, ?, ?, ?)',
+      categories[1].name, categories[1].color, categories[1].icon, 1
+    );
+    const hardwareId = hardwareResult.lastID;
 
     const filters = [
       { categoryId: celularesId, name: 'Galaxy', type: 'broad', keywords: JSON.stringify(['galaxy', 'samsung', 's24', 's25', 'tab', 'watch']) },
@@ -169,14 +189,22 @@ export const seedDatabase = (): void => {
       { categoryId: hardwareId, name: 'AMD RX', type: 'broad', keywords: JSON.stringify(['rx', 'radeon', 'amd']) }
     ];
 
-    const filterStmt = db.prepare('INSERT INTO filters (category_id, name, type, keywords) VALUES (?, ?, ?, ?)');
     for (const filter of filters) {
-      filterStmt.run(filter.categoryId, filter.name, filter.type, filter.keywords);
+      await database.run(
+        'INSERT INTO filters (category_id, name, type, keywords) VALUES (?, ?, ?, ?)',
+        filter.categoryId, filter.name, filter.type, filter.keywords
+      );
     }
   }
 
   logger.info('Seed concluído!', 'Database');
 };
 
-initDatabase();
-seedDatabase();
+// Inicializa ao importar
+export const initDb = async (): Promise<void> => {
+  await initDatabase();
+  await seedDatabase();
+};
+
+// Exporta db já inicializado para uso síncrono (depois de initDb)
+export { db };

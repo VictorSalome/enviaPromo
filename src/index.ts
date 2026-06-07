@@ -1,14 +1,18 @@
 import { app } from './core/server.js';
 import { config } from './core/config.js';
-import './core/database.js';
+import { initDb } from './core/database.js';
 import * as logger from './core/logger.js';
 
-const startServer = (): void => {
+const startServer = async (): Promise<void> => {
   try {
+    // Inicializa banco de dados (cria tabelas e seed)
+    await initDb();
+
     app.listen(config.PORT, () => {
       logger.info(`🚀 Servidor rodando na porta ${config.PORT}`, 'Server');
       logger.info(`📊 Ambiente: ${config.NODE_ENV}`, 'Server');
       logger.info(`💾 Banco: ${config.DATABASE_PATH}`, 'Server');
+      logger.info(`👤 Admin: ${config.ADMIN_USERNAME}`, 'Server');
     });
   } catch (err) {
     logger.error(`Falha ao iniciar servidor: ${err}`, 'Server');

@@ -12,7 +12,8 @@
   },
   "dependencies": {
     "express": "^4.18.2",
-    "better-sqlite3": "^9.4.3",
+    "sqlite3": "^5.1.7",
+    "sqlite": "^5.1.1",
     "telegram": "^2.19.10",
     "bcryptjs": "^2.4.3",
     "express-session": "^1.18.0",
@@ -26,7 +27,6 @@
     "@types/bcryptjs": "^2.4.6",
     "@types/express-session": "^1.17.10",
     "@types/cors": "^2.8.17",
-    "@types/better-sqlite3": "^7.6.8",
     "typescript": "^5.3.3",
     "tsx": "^4.7.0"
   },
