@@ -3,9 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard - Promo Monitor</title>
+  <title>Promo Monitor v2.0</title>
   <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.2/dist/full.min.css" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body class="min-h-screen bg-base-200">
   <div class="drawer lg:drawer-open">
@@ -13,61 +14,257 @@
     
     <div class="drawer-content">
       <!-- Navbar -->
-      <div class="navbar bg-base-100 shadow-lg">
+      <div class="navbar bg-base-100 shadow-lg sticky top-0 z-50">
         <div class="flex-none lg:hidden">
           <label for="drawer-toggle" class="btn btn-square btn-ghost">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
           </label>
         </div>
         <div class="flex-1">
-          <h1 class="text-xl font-bold">🎯 Promo Monitor</h1>
+          <h1 class="text-xl font-bold">🎯 Promo Monitor <span class="text-sm opacity-50">v2.0</span></h1>
         </div>
-        <div class="flex-none gap-2">
-          <span id="userName" class="text-sm opacity-70">Carregando...</span>
-          <button onclick="logout()" class="btn btn-ghost btn-sm">Sair</button>
+        <div class="flex-none gap-4">
+          <span id="user-name" class="text-sm opacity-70">Carregando...</span>
+          <button onclick="logout()" class="btn btn-ghost btn-sm">🚪 Sair</button>
         </div>
       </div>
 
       <!-- Main Content -->
-      <main class="p-6">
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-          <div class="card bg-base-100 shadow-xl">
-            <div class="card-body">
-              <h3 class="card-title text-lg">📡 Status</h3>
-              <p id="monitorStatus" class="text-2xl font-bold text-success">Online</p>
+      <main class="p-4 lg:p-6">
+        
+        <!-- Section: Dashboard -->
+        <div id="section-dashboard" class="section">
+          <h2 class="text-2xl font-bold mb-6">📊 Dashboard</h2>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div class="card bg-base-100 shadow-xl">
+              <div class="card-body">
+                <h3 class="card-title text-lg">📨 Hoje</h3>
+                <p id="stat-today" class="text-3xl font-bold text-primary">0</p>
+              </div>
+            </div>
+            <div class="card bg-base-100 shadow-xl">
+              <div class="card-body">
+                <h3 class="card-title text-lg">📺 Canais</h3>
+                <p id="stat-channels" class="text-3xl font-bold text-success">0</p>
+              </div>
+            </div>
+            <div class="card bg-base-100 shadow-xl">
+              <div class="card-body">
+                <h3 class="card-title text-lg">🎯 Filtros</h3>
+                <p id="stat-filters" class="text-3xl font-bold text-info">0</p>
+              </div>
+            </div>
+            <div class="card bg-base-100 shadow-xl">
+              <div class="card-body">
+                <h3 class="card-title text-lg">📡 Status</h3>
+                <p id="stat-status" class="text-3xl font-bold text-success">Online</p>
+              </div>
             </div>
           </div>
+          
           <div class="card bg-base-100 shadow-xl">
             <div class="card-body">
-              <h3 class="card-title text-lg">📺 Canais</h3>
-              <p class="text-2xl font-bold">7</p>
-            </div>
-          </div>
-          <div class="card bg-base-100 shadow-xl">
-            <div class="card-body">
-              <h3 class="card-title text-lg">🎯 Filtros</h3>
-              <p class="text-2xl font-bold">6</p>
-            </div>
-          </div>
-          <div class="card bg-base-100 shadow-xl">
-            <div class="card-body">
-              <h3 class="card-title text-lg">📨 Hoje</h3>
-              <p class="text-2xl font-bold">0</p>
+              <h3 class="card-title">🚀 Bem-vindo!</h3>
+              <p class="mt-2">O Promo Monitor está configurado e pronto para uso.</p>
+              <ul class="list-disc list-inside mt-2 space-y-1 opacity-70">
+                <li>Configure o Telegram na seção "⚙️ Telegram"</li>
+                <li>Gerencie canais em "📺 Canais"</li>
+                <li>Configure filtros em "🎯 Filtros"</li>
+                <li>Monitore em "📡 Monitor"</li>
+              </ul>
             </div>
           </div>
         </div>
 
-        <div class="card bg-base-100 shadow-xl">
-          <div class="card-body">
-            <h2 class="card-title">🎉 Bem-vindo ao Promo Monitor v2.0!</h2>
-            <p class="mt-4">O sistema está sendo implementado. Em breve teremos:</p>
-            <ul class="list-disc list-inside mt-2 space-y-1">
-              <li>Gerenciamento de canais do Telegram</li>
-              <li>Filtros e categorias inteligentes</li>
-              <li>Monitoramento 24/7</li>
-              <li>Envio automático para WhatsApp</li>
-              <li>Estatísticas em tempo real</li>
-            </ul>
+        <!-- Section: Telegram Config -->
+        <div id="section-telegram" class="section" style="display:none">
+          <h2 class="text-2xl font-bold mb-6">⚙️ Configuração do Telegram</h2>
+          
+          <div class="card bg-base-100 shadow-xl max-w-2xl">
+            <div class="card-body">
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="card-title">Credenciais MTProto</h3>
+                <span id="tg-status" class="badge badge-error">🔴 Desconectado</span>
+              </div>
+              
+              <div class="form-control">
+                <label class="label"><span class="label-text">API ID</span></label>
+                <input type="text" id="tg-api-id" class="input input-bordered" placeholder="12345678">
+              </div>
+              
+              <div class="form-control">
+                <label class="label"><span class="label-text">API Hash</span></label>
+                <input type="password" id="tg-api-hash" class="input input-bordered" placeholder="Sua API Hash">
+              </div>
+              
+              <div class="form-control">
+                <label class="label"><span class="label-text">Telefone</span></label>
+                <input type="text" id="tg-phone" class="input input-bordered" placeholder="+5511987319331">
+              </div>
+              
+              <div class="card-actions justify-end mt-4">
+                <button onclick="saveTelegramConfig()" class="btn btn-primary">💾 Salvar Configuração</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section: Channels -->
+        <div id="section-channels" class="section" style="display:none">
+          <h2 class="text-2xl font-bold mb-6">📺 Canais Monitorados</h2>
+          
+          <div class="card bg-base-100 shadow-xl mb-4">
+            <div class="card-body">
+              <div class="flex gap-2">
+                <input type="text" id="new-channel" class="input input-bordered flex-1" placeholder="@canal_promocoes">
+                <button onclick="addChannel()" class="btn btn-primary">➕ Adicionar</button>
+              </div>
+            </div>
+          </div>
+          
+          <div class="card bg-base-100 shadow-xl">
+            <div class="card-body">
+              <div class="overflow-x-auto">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>Username</th>
+                      <th>Nome</th>
+                      <th>Ativo</th>
+                      <th>Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody id="channels-list"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section: Filters -->
+        <div id="section-filters" class="section" style="display:none">
+          <h2 class="text-2xl font-bold mb-6">🎯 Filtros e Categorias</h2>
+          
+          <div class="card bg-base-100 shadow-xl mb-4">
+            <div class="card-body">
+              <h3 class="card-title text-lg mb-4">Adicionar Categoria</h3>
+              <div class="flex gap-2">
+                <input type="text" id="new-category-name" class="input input-bordered flex-1" placeholder="Nome da categoria">
+                <input type="color" id="new-category-color" class="w-16 h-12 rounded" value="#3b82f6">
+                <button onclick="addCategory()" class="btn btn-primary">➕ Criar</button>
+              </div>
+            </div>
+          </div>
+          
+          <div id="filters-container"></div>
+        </div>
+
+        <!-- Section: Monitor -->
+        <div id="section-monitor" class="section" style="display:none">
+          <h2 class="text-2xl font-bold mb-6">📡 Controle do Monitor</h2>
+          
+          <div class="card bg-base-100 shadow-xl mb-4">
+            <div class="card-body">
+              <div class="flex items-center justify-between">
+                <div>
+                  <h3 class="card-title">Status do Monitor</h3>
+                  <span id="monitor-status" class="badge badge-error text-lg mt-2">🔴 Parado</span>
+                </div>
+                <button id="monitor-toggle-btn" onclick="toggleMonitor()" class="btn btn-success btn-lg">▶️ Iniciar Monitor</button>
+              </div>
+            </div>
+          </div>
+          
+          <div class="card bg-base-100 shadow-xl">
+            <div class="card-body">
+              <h3 class="card-title mb-4">🧪 Testes</h3>
+              <div class="flex gap-2">
+                <button id="btn-test-whatsapp" onclick="testWhatsApp()" class="btn btn-outline">🧪 Testar WhatsApp</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section: Stats -->
+        <div id="section-stats" class="section" style="display:none">
+          <h2 class="text-2xl font-bold mb-6">📊 Estatísticas</h2>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+            <div class="card bg-base-100 shadow-xl">
+              <div class="card-body">
+                <h3 class="text-sm opacity-70">Hoje</h3>
+                <p id="stats-today" class="text-2xl font-bold">0</p>
+              </div>
+            </div>
+            <div class="card bg-base-100 shadow-xl">
+              <div class="card-body">
+                <h3 class="text-sm opacity-70">Esta Semana</h3>
+                <p id="stats-week" class="text-2xl font-bold">0</p>
+              </div>
+            </div>
+            <div class="card bg-base-100 shadow-xl">
+              <div class="card-body">
+                <h3 class="text-sm opacity-70">Este Mês</h3>
+                <p id="stats-month" class="text-2xl font-bold">0</p>
+              </div>
+            </div>
+            <div class="card bg-base-100 shadow-xl">
+              <div class="card-body">
+                <h3 class="text-sm opacity-70">Canais</h3>
+                <p id="stats-channels" class="text-2xl font-bold">0</p>
+              </div>
+            </div>
+            <div class="card bg-base-100 shadow-xl">
+              <div class="card-body">
+                <h3 class="text-sm opacity-70">Filtros</h3>
+                <p id="stats-filters" class="text-2xl font-bold">0</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section: Price Alerts -->
+        <div id="section-price-alerts" class="section" style="display:none">
+          <h2 class="text-2xl font-bold mb-6">🎯 Alertas de Preço</h2>
+          
+          <div class="card bg-base-100 shadow-xl mb-4">
+            <div class="card-body">
+              <h3 class="card-title text-lg mb-4">Novo Alerta</h3>
+              <div class="flex gap-2">
+                <input type="text" id="alert-product" class="input input-bordered flex-1" placeholder="Nome do produto (ex: Galaxy S22)">
+                <input type="number" id="alert-price" class="input input-bordered w-32" placeholder="Preço alvo">
+                <button onclick="addPriceAlert()" class="btn btn-primary">➕ Adicionar</button>
+              </div>
+            </div>
+          </div>
+          
+          <div class="card bg-base-100 shadow-xl">
+            <div class="card-body">
+              <div class="overflow-x-auto">
+                <table class="table">
+                  <thead>
+                    <tr><th>Produto</th><th>Preço Alvo</th><th>Ações</th></tr>
+                  </thead>
+                  <tbody id="price-alerts-list"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section: Backup -->
+        <div id="section-backup" class="section" style="display:none">
+          <h2 class="text-2xl font-bold mb-6">💾 Backup</h2>
+          
+          <div class="card bg-base-100 shadow-xl">
+            <div class="card-body">
+              <h3 class="card-title mb-4">Exportar/Importar Configurações</h3>
+              <p class="mb-4 opacity-70">Exporte suas configurações (canais, filtros) ou importe de um arquivo anterior.</p>
+              <div class="flex gap-2">
+                <button onclick="exportConfig()" class="btn btn-primary">📥 Exportar Config</button>
+              </div>
+            </div>
           </div>
         </div>
       </main>
@@ -76,53 +273,63 @@
     <!-- Sidebar -->
     <div class="drawer-side">
       <label for="drawer-toggle" class="drawer-overlay"></label>
-      <aside class="menu p-4 w-80 min-h-full bg-base-100 text-base-content">
-        <h2 class="text-xl font-bold mb-6">🎯 Promo Monitor</h2>
+      <aside class="menu p-4 w-80 min-h-full bg-base-100 text-base-content shadow-xl">
+        <div class="mb-6">
+          <h2 class="text-2xl font-bold">🎯 Promo Monitor</h2>
+          <p class="text-sm opacity-50">v2.0</p>
+        </div>
         
-        <ul class="space-y-2">
-          <li><a href="#" class="active">📊 Dashboard</a></li>
-          <li><a href="#">⚙️ Telegram</a></li>
-          <li><a href="#">📺 Canais</a></li>
-          <li><a href="#">🎯 Filtros</a></li>
-          <li><a href="#">📡 Monitor</a></li>
-          <li><a href="#">📊 Estatísticas</a></li>
-          <li><a href="#">💾 Backup</a></li>
+        <ul class="space-y-1">
+          <li><a href="#" class="menu-item active" data-section="dashboard">📊 Dashboard</a></li>
+          <li><a href="#" class="menu-item" data-section="telegram">⚙️ Telegram</a></li>
+          <li><a href="#" class="menu-item" data-section="channels">📺 Canais</a></li>
+          <li><a href="#" class="menu-item" data-section="filters">🎯 Filtros</a></li>
+          <li><a href="#" class="menu-item" data-section="monitor">📡 Monitor</a></li>
+          <li><a href="#" class="menu-item" data-section="price-alerts">🎯 Preços</a></li>
+          <li><a href="#" class="menu-item" data-section="stats">📊 Estatísticas</a></li>
+          <li><a href="#" class="menu-item" data-section="backup">💾 Backup</a></li>
         </ul>
+        
+        <div class="mt-auto pt-6 border-t border-base-300">
+          <p class="text-xs opacity-50">💡 Dica: Configure o Telegram primeiro!</p>
+        </div>
       </aside>
     </div>
   </div>
 
   <script>
-    // Verifica autenticação
+    // Simplified version for now - will be replaced by compiled JS
     async function checkAuth() {
       try {
-        const response = await fetch('/api/auth/me', { credentials: 'include' });
-        const data = await response.json();
-        
-        if (!data.success) {
-          window.location.href = '/login';
-          return;
-        }
-        
-        document.getElementById('userName').textContent = data.user.username;
-      } catch (err) {
-        window.location.href = '/login';
-      }
+        const res = await fetch('/api/auth/me', { credentials: 'include' });
+        const data = await res.json();
+        if (!data.success) { window.location.href = '/login'; return; }
+        document.getElementById('user-name').textContent = data.user.username;
+      } catch (err) { window.location.href = '/login'; }
+    }
+
+    function navigate(section) {
+      document.querySelectorAll('.section').forEach(el => el.style.display = 'none');
+      document.getElementById('section-' + section).style.display = 'block';
+      document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
+      document.querySelector('[data-section="' + section + '"]').classList.add('active');
     }
 
     async function logout() {
-      try {
-        await fetch('/api/auth/logout', { 
-          method: 'POST',
-          credentials: 'include'
-        });
-      } catch (err) {
-        console.error('Erro no logout:', err);
-      }
+      await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
       window.location.href = '/login';
     }
 
-    checkAuth();
+    // Event listeners
+    document.addEventListener('DOMContentLoaded', () => {
+      checkAuth();
+      document.querySelectorAll('.menu-item').forEach(item => {
+        item.addEventListener('click', (e) => {
+          e.preventDefault();
+          navigate(e.currentTarget.dataset.section);
+        });
+      });
+    });
   </script>
 </body>
 </html>
