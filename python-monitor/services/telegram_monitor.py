@@ -1,9 +1,8 @@
 import asyncio
 from datetime import datetime
 from telethon import TelegramClient, events
-from config import API_ID, API_HASH, CANAL_ID, PALAVRAS_CHAVE, TEMPO_MINIMO_ENTRE_MENSAGENS
+from config import API_ID, API_HASH, CANAIS, TEMPO_MINIMO_ENTRE_MENSAGENS
 from services.whatsapp_sender import enviar_whatsapp
-from utils.filtro import contem_palavra_chave
 from utils.logger import log_info, log_error, log_debug
 
 
@@ -12,7 +11,7 @@ ultimo_envio = None
 
 async def monitorar_canal():
     """
-    Monitora o canal/grupo configurado e envia mensagens filtradas para o WhatsApp.
+    Monitora os canais/grupos configurados e envia todas as mensagens para o WhatsApp.
     """
     global ultimo_envio
     
@@ -20,15 +19,17 @@ async def monitorar_canal():
         log_error('API_ID ou API_HASH não configurados. Obtenha em https://my.telegram.org/apps')
         return
     
-    log_info(f'Iniciando monitoramento do canal: {CANAL_ID}')
-    log_info(f'Palavras-chave ativas: {len(PALAVRAS_CHAVE)} termos configurados')
+    log_info(f'Iniciando monitoramento de {len(CANAIS)} canais')
+    for canal in CANAIS:
+        log_info(f'  - {canal}')
+    log_info('Modo: TODAS as mensagens serão enviadas (sem filtro)')
     
     client = TelegramClient('session', API_ID, API_HASH)
     
     await client.start()
     log_info('Conectado ao Telegram com sucesso!')
     
-    @client.on(events.NewMessage(chats=CANAL_ID))
+    @client.on(events.NewMessage(chats=CANAIS))
     async def handler(event):
         global ultimo_envio
         
@@ -39,12 +40,10 @@ async def monitorar_canal():
                 log_debug('Mensagem sem texto, ignorando')
                 return
             
-            log_debug(f'Nova mensagem recebida: {mensagem[:100]}...')
+            chat = await event.get_chat()
+            nome_canal = getattr(chat, 'title', 'Desconhecido')
             
-            # Verifica se contém palavra-chave
-            if not contem_palavra_chave(mensagem):
-                log_debug('Mensagem não contém palavra-chave, ignorando')
-                return
+            log_debug(f'[{nome_canal}] Nova mensagem: {mensagem[:100]}...')
             
             # Verifica tempo mínimo entre envios
             agora = datetime.now()
@@ -52,9 +51,12 @@ async def monitorar_canal():
                 log_debug(f'Muito cedo para enviar novamente. Aguarde {TEMPO_MINIMO_ENTRE_MENSAGENS}s')
                 return
             
+            # Adiciona nome do canal na mensagem
+            mensagem_formatada = f"📢 *{nome_canal}*\n\n{mensagem}"
+            
             # Envia para WhatsApp
-            log_info(f'Palavra-chave detectada! Enviando para WhatsApp...')
-            sucesso = enviar_whatsapp(mensagem)
+            log_info(f'Enviando mensagem para WhatsApp...')
+            sucesso = enviar_whatsapp(mensagem_formatada)
             
             if sucesso:
                 ultimo_envio = agora

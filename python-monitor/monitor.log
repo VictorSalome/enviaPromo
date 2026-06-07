@@ -1,0 +1,46 @@
+Cannot get difference since the account is likely misusing the session: attempt to write a readonly database
+Unhandled exception from keepalive_handle after cancelling <class '_asyncio.Task'> (<Task finished name='Task-7' coro=<UpdateMethods._keepalive_loop() done, defined at /Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/telethon/client/updates.py:481> exception=OperationalError('disk I/O error')>)
+Traceback (most recent call last):
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/telethon/helpers.py", line 176, in _cancel
+    await task
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/telethon/client/updates.py", line 519, in _keepalive_loop
+    self.session.save()
+    ~~~~~~~~~~~~~~~~~^^
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/telethon/sessions/sqlite.py", line 237, in save
+    self._conn.commit()
+    ~~~~~~~~~~~~~~~~~^^
+sqlite3.OperationalError: disk I/O error
+Unhandled exception from keepalive_handle after cancelling <class '_asyncio.Task'> (<Task finished name='Task-7' coro=<UpdateMethods._keepalive_loop() done, defined at /Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/telethon/client/updates.py:481> exception=OperationalError('disk I/O error')>)
+Traceback (most recent call last):
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/telethon/helpers.py", line 176, in _cancel
+    await task
+sqlite3.OperationalError: disk I/O error
+OperationalError exception in shielded future
+future: <Task finished name='Task-9' coro=<TelegramBaseClient._disconnect_coro() done, defined at /Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/telethon/client/telegrambaseclient.py:702> exception=OperationalError('attempt to write a readonly database')>
+Traceback (most recent call last):
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/telethon/client/telegrambaseclient.py", line 732, in _disconnect_coro
+    self._save_states_and_entities()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/telethon/client/telegrambaseclient.py", line 689, in _save_states_and_entities
+    self.session.process_entities(types.contacts.ResolvedPeer(None, [e._as_input_peer() for e in entities], []))
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/telethon/sessions/sqlite.py", line 301, in process_entities
+    c.executemany(
+    ~~~~~~~~~~~~~^
+        'insert or replace into entities values (?,?,?,?,?,?)', rows)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sqlite3.OperationalError: attempt to write a readonly database
+[2026-06-07 14:47:15] [INFO] === Monitor de Canal Telegram ===
+[2026-06-07 14:47:15] [INFO] Iniciando aplicação...
+[2026-06-07 14:47:15] [INFO] Iniciando monitoramento de 6 canais
+[2026-06-07 14:47:15] [INFO]   - @urubupromo
+[2026-06-07 14:47:15] [INFO]   - @ofertasgamer_oficial
+[2026-06-07 14:47:15] [INFO]   - @LaPromotion
+[2026-06-07 14:47:15] [INFO]   - @mpromotech
+[2026-06-07 14:47:15] [INFO]   - @ofertasthautec
+[2026-06-07 14:47:15] [INFO]   - @iuriindica
+[2026-06-07 14:47:15] [INFO] Palavras-chave ativas: 25 termos configurados
+[2026-06-07 14:47:16] [INFO] Conectado ao Telegram com sucesso!
+[2026-06-07 14:47:16] [INFO] Monitoramento ativo! Aguardando mensagens...
+[2026-06-07 14:47:16] [INFO] Pressione Ctrl+C para parar
+[2026-06-07 14:48:57] [ERRO] Erro fatal: attempt to write a readonly database
