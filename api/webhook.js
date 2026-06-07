@@ -8,8 +8,18 @@ export default async function handler(req, res) {
   try {
     const { message } = req.body;
 
-    if (!message || !message.text || message.chat.id !== CHAT_ID_PERMITIDO) {
+    console.log('[DEBUG] Mensagem recebida:', JSON.stringify(req.body, null, 2));
+
+    if (!message || !message.text) {
+      console.log('[DEBUG] Ignorado: sem mensagem ou sem texto');
       return res.status(200).send('Ignorado por segurança ou formato.');
+    }
+
+    console.log('[DEBUG] Chat ID:', message.chat.id, '| Texto:', message.text.substring(0, 50));
+
+    if (message.chat.id !== CHAT_ID_PERMITIDO) {
+      console.log('[DEBUG] Chat ID não autorizado. Esperado:', CHAT_ID_PERMITIDO);
+      return res.status(200).send('Chat não autorizado.');
     }
 
     const phone = process.env.WHATSAPP_PHONE;
