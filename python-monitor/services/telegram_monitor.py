@@ -1,4 +1,5 @@
 import asyncio
+import os
 from datetime import datetime
 from telethon import TelegramClient, events
 from config import API_ID, API_HASH, CANAIS, TEMPO_MINIMO_ENTRE_MENSAGENS
@@ -7,6 +8,17 @@ from utils.logger import log_info, log_error, log_debug
 
 
 ultimo_envio = None
+
+
+def limpar_sessao_corrompida():
+    """Remove arquivos de sessão corrompidos"""
+    for arquivo in ['session.session', 'session.session-journal']:
+        if os.path.exists(arquivo):
+            try:
+                os.remove(arquivo)
+                log_info(f'Arquivo {arquivo} removido')
+            except Exception as e:
+                log_error(f'Erro ao remover {arquivo}: {e}')
 
 
 async def monitorar_canal():
@@ -24,10 +36,19 @@ async def monitorar_canal():
         log_info(f'  - {canal}')
     log_info('Modo: TODAS as mensagens serão enviadas (sem filtro)')
     
+    # Limpa sessão corrompida se existir
+    limpar_sessao_corrompida()
+    
     client = TelegramClient('session', API_ID, API_HASH)
     
-    await client.start()
-    log_info('Conectado ao Telegram com sucesso!')
+    try:
+        await client.start()
+        log_info('Conectado ao Telegram com sucesso!')
+    except Exception as e:
+        log_error(f'Erro ao conectar: {e}')
+        log_info('Tentando limpar sessão e reconectar...')
+        limpar_sessao_corrompida()
+        return
     
     @client.on(events.NewMessage(chats=CANAIS))
     async def handler(event):
