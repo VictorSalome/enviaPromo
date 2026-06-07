@@ -1,0 +1,11 @@
+import { Router } from 'express';
+import * as priceAlertController from './price-alert.controller.js';
+import { requireAuth } from '../auth/auth.middleware.js';
+
+const router = Router();
+
+router.get('/', requireAuth, priceAlertController.list);
+router.post('/', requireAuth, priceAlertController.create);
+router.delete('/:id', requireAuth, priceAlertController.remove);
+
+export default router;

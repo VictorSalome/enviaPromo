@@ -4,9 +4,18 @@ import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { config } from './config.js';
-import authRoutes from '../features/auth/auth.routes.js';
 
-// Extensão do tipo Session para incluir user
+import authRoutes from '../features/auth/auth.routes.js';
+import telegramConfigRoutes from '../features/telegram-config/telegram-config.routes.js';
+import channelRoutes from '../features/channel/channel.routes.js';
+import filterRoutes from '../features/filter/filter.routes.js';
+import monitorRoutes from '../features/monitor/monitor.routes.js';
+import whatsappRoutes from '../features/whatsapp/whatsapp.routes.js';
+import statsRoutes from '../features/stats/stats.routes.js';
+import backupRoutes from '../features/backup/backup.routes.js';
+import testConnectionRoutes from '../features/test-connection/test-connection.routes.js';
+import priceAlertRoutes from '../features/price-alert/price-alert.routes.js';
+
 declare module 'express-session' {
   interface SessionData {
     user?: { username: string };
@@ -33,12 +42,21 @@ app.use(session({
   cookie: {
     secure: config.NODE_ENV === 'production',
     httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000 // 24 horas
+    maxAge: 24 * 60 * 60 * 1000
   }
 }));
 
 // API Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/telegram-config', telegramConfigRoutes);
+app.use('/api/channels', channelRoutes);
+app.use('/api/filters', filterRoutes);
+app.use('/api/monitor', monitorRoutes);
+app.use('/api/whatsapp', whatsappRoutes);
+app.use('/api/stats', statsRoutes);
+app.use('/api/backup', backupRoutes);
+app.use('/api/test', testConnectionRoutes);
+app.use('/api/price-alerts', priceAlertRoutes);
 
 // Serve arquivos estáticos do frontend
 app.use(express.static(path.join(__dirname, '../../public')));
@@ -48,7 +66,7 @@ app.get('/api/health', (_, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Rota para SPA (Single Page Application)
+// Rota para SPA
 app.get('/', (_, res) => {
   res.sendFile(path.join(__dirname, '../../public/index.html'));
 });

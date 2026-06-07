@@ -1,0 +1,11 @@
+import { Router } from 'express';
+import * as telegramConfigController from './telegram-config.controller.js';
+import { requireAuth } from '../auth/auth.middleware.js';
+
+const router = Router();
+
+router.get('/', requireAuth, telegramConfigController.getConfig);
+router.post('/', requireAuth, telegramConfigController.saveConfig);
+router.get('/status', telegramConfigController.getStatus);
+
+export default router;
