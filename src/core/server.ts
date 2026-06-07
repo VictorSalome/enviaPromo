@@ -4,6 +4,14 @@ import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { config } from './config.js';
+import authRoutes from '../features/auth/auth.routes.js';
+
+// Extensão do tipo Session para incluir user
+declare module 'express-session' {
+  interface SessionData {
+    user?: { username: string };
+  }
+}
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -28,6 +36,9 @@ app.use(session({
     maxAge: 24 * 60 * 60 * 1000 // 24 horas
   }
 }));
+
+// API Routes
+app.use('/api/auth', authRoutes);
 
 // Serve arquivos estáticos do frontend
 app.use(express.static(path.join(__dirname, '../../public')));

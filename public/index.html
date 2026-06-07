@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - Promo Monitor</title>
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.2/dist/full.min.css" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-base-200">
+  <div class="drawer lg:drawer-open">
+    <input id="drawer-toggle" type="checkbox" class="drawer-toggle">
+    
+    <div class="drawer-content">
+      <!-- Navbar -->
+      <div class="navbar bg-base-100 shadow-lg">
+        <div class="flex-none lg:hidden">
+          <label for="drawer-toggle" class="btn btn-square btn-ghost">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+          </label>
+        </div>
+        <div class="flex-1">
+          <h1 class="text-xl font-bold">🎯 Promo Monitor</h1>
+        </div>
+        <div class="flex-none gap-2">
+          <span id="userName" class="text-sm opacity-70">Carregando...</span>
+          <button onclick="logout()" class="btn btn-ghost btn-sm">Sair</button>
+        </div>
+      </div>
+
+      <!-- Main Content -->
+      <main class="p-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+          <div class="card bg-base-100 shadow-xl">
+            <div class="card-body">
+              <h3 class="card-title text-lg">📡 Status</h3>
+              <p id="monitorStatus" class="text-2xl font-bold text-success">Online</p>
+            </div>
+          </div>
+          <div class="card bg-base-100 shadow-xl">
+            <div class="card-body">
+              <h3 class="card-title text-lg">📺 Canais</h3>
+              <p class="text-2xl font-bold">7</p>
+            </div>
+          </div>
+          <div class="card bg-base-100 shadow-xl">
+            <div class="card-body">
+              <h3 class="card-title text-lg">🎯 Filtros</h3>
+              <p class="text-2xl font-bold">6</p>
+            </div>
+          </div>
+          <div class="card bg-base-100 shadow-xl">
+            <div class="card-body">
+              <h3 class="card-title text-lg">📨 Hoje</h3>
+              <p class="text-2xl font-bold">0</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="card bg-base-100 shadow-xl">
+          <div class="card-body">
+            <h2 class="card-title">🎉 Bem-vindo ao Promo Monitor v2.0!</h2>
+            <p class="mt-4">O sistema está sendo implementado. Em breve teremos:</p>
+            <ul class="list-disc list-inside mt-2 space-y-1">
+              <li>Gerenciamento de canais do Telegram</li>
+              <li>Filtros e categorias inteligentes</li>
+              <li>Monitoramento 24/7</li>
+              <li>Envio automático para WhatsApp</li>
+              <li>Estatísticas em tempo real</li>
+            </ul>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="drawer-side">
+      <label for="drawer-toggle" class="drawer-overlay"></label>
+      <aside class="menu p-4 w-80 min-h-full bg-base-100 text-base-content">
+        <h2 class="text-xl font-bold mb-6">🎯 Promo Monitor</h2>
+        
+        <ul class="space-y-2">
+          <li><a href="#" class="active">📊 Dashboard</a></li>
+          <li><a href="#">⚙️ Telegram</a></li>
+          <li><a href="#">📺 Canais</a></li>
+          <li><a href="#">🎯 Filtros</a></li>
+          <li><a href="#">📡 Monitor</a></li>
+          <li><a href="#">📊 Estatísticas</a></li>
+          <li><a href="#">💾 Backup</a></li>
+        </ul>
+      </aside>
+    </div>
+  </div>
+
+  <script>
+    // Verifica autenticação
+    async function checkAuth() {
+      try {
+        const response = await fetch('/api/auth/me', { credentials: 'include' });
+        const data = await response.json();
+        
+        if (!data.success) {
+          window.location.href = '/login';
+          return;
+        }
+        
+        document.getElementById('userName').textContent = data.user.username;
+      } catch (err) {
+        window.location.href = '/login';
+      }
+    }
+
+    async function logout() {
+      try {
+        await fetch('/api/auth/logout', { 
+          method: 'POST',
+          credentials: 'include'
+        });
+      } catch (err) {
+        console.error('Erro no logout:', err);
+      }
+      window.location.href = '/login';
+    }
+
+    checkAuth();
+  </script>
+</body>
+</html>

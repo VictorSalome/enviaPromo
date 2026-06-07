@@ -1,5 +1,3 @@
-import { Log } from './types.js';
-
 const now = (): string => {
   const d = new Date();
   return d.toISOString().replace('T', ' ').slice(0, 19);
