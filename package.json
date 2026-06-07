@@ -7,6 +7,11 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
+    "start:pm2": "pm2 start scripts/pm2.config.js",
+    "stop:pm2": "pm2 stop scripts/pm2.config.js",
+    "restart:pm2": "pm2 restart scripts/pm2.config.js",
+    "logs:pm2": "pm2 logs promo-monitor",
+    "deploy:oracle": "bash scripts/oracle-deploy.sh",
     "migrate": "tsx scripts/migrate.ts",
     "seed": "tsx scripts/seed.ts"
   },
