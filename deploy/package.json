@@ -1,0 +1,44 @@
+{
+  "name": "promo-monitor",
+  "version": "2.0.0",
+  "description": "Monitor de promoções Telegram para WhatsApp",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "start:pm2": "pm2 start scripts/pm2.config.js",
+    "stop:pm2": "pm2 stop scripts/pm2.config.js",
+    "restart:pm2": "pm2 restart scripts/pm2.config.js",
+    "logs:pm2": "pm2 logs promo-monitor",
+    "deploy:oracle": "bash scripts/oracle-deploy.sh",
+    "migrate": "tsx scripts/migrate.ts",
+    "seed": "tsx scripts/seed.ts"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-session": "^1.18.0",
+    "multer": "^2.1.1",
+    "node-fetch": "^3.3.2",
+    "sqlite": "^5.1.1",
+    "sqlite3": "^5.1.7",
+    "telegram": "^2.19.10",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/express-session": "^1.17.10",
+    "@types/multer": "^2.1.0",
+    "@types/node": "^20.11.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

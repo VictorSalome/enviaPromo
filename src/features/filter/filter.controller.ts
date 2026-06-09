@@ -63,3 +63,23 @@ export const remove = async (req: Request, res: Response): Promise<void> => {
     res.status(500).json({ success: false, message: 'Erro ao remover filtro' });
   }
 };
+
+export const toggleAll = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { isActive } = req.body;
+    await filterRepo.toggleAllFilters(isActive);
+    res.json({ success: true, message: isActive ? "Todos os filtros ativados" : "Todos os filtros desativados" });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Erro ao alterar filtros" });
+  }
+};
+
+export const getStats = async (_req: Request, res: Response): Promise<void> => {
+  try {
+    const active = await filterRepo.getActiveFiltersCount();
+    const total = await filterRepo.getTotalFiltersCount();
+    res.json({ success: true, data: { active, total } });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Erro ao obter estatísticas" });
+  }
+};
