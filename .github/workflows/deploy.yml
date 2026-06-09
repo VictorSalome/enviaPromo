@@ -33,49 +33,26 @@ jobs:
           cp package*.json deploy/
           tar -czf deploy.tar.gz deploy/
           
-      - name: 🔑 Setup SSH
+      - name: 📤 Upload deploy package
         run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.ORACLE_SSH_KEY }}" > ~/.ssh/oracle_key
-          chmod 600 ~/.ssh/oracle_key
-          cat >> ~/.ssh/config << EOF
-          Host oracle
-            HostName 136.248.109.21
-            User ubuntu
-            IdentityFile ~/.ssh/oracle_key
-            StrictHostKeyChecking no
-            UserKnownHostsFile /dev/null
-          EOF
-          chmod 600 ~/.ssh/config
-          
-      - name: 📤 Upload and Deploy
+          echo "📤 Enviando pacote de deploy..."
+          curl -X POST \
+            -F "file=@deploy.tar.gz" \
+            -H "X-Deploy-Token: deploy-token-123456" \
+            http://136.248.109.21:3001/api/deploy/upload \
+            --connect-timeout 30 \
+            --max-time 120
+            
+      - name: 🔄 Trigger deploy
         run: |
-          echo "📤 Enviando pacote para VM..."
-          scp -F ~/.ssh/config deploy.tar.gz oracle:~/enviaPromo/
-          
-          echo "🚀 Executando deploy na VM..."
-          ssh -F ~/.ssh/config oracle << 'REMOTE_EOF'
-            cd ~/enviaPromo
-            echo "📦 Extraindo arquivos..."
-            tar -xzf deploy.tar.gz
-            cp -r deploy/dist/* dist/ 2>/dev/null || (cp -r deploy/dist dist-new && rm -rf dist && mv dist-new dist)
-            cp -r deploy/public/* public/ 2>/dev/null || true
-            cp deploy/package*.json ./ 2>/dev/null || true
-            rm -rf deploy deploy.tar.gz
+          echo "🔄 Acionando deploy na VM..."
+          curl -X POST \
+            -H "X-Deploy-Token: deploy-token-123456" \
+            http://136.248.109.21:3001/api/deploy/trigger \
+            --connect-timeout 30 \
+            --max-time 120
             
-            echo "📥 Instalando dependencias..."
-            npm ci --production
-            
-            echo "🔄 Reiniciando PM2..."
-            pm2 restart promo-monitor || pm2 start dist/index.js --name promo-monitor
-            pm2 save
-            
-            echo "✅ Deploy concluido!"
-          REMOTE_EOF
-          
+      - name: ✅ Notify success
+        run: |
           echo "🎉 Deploy realizado com sucesso!"
           echo "🌐 Aplicacao: http://136.248.109.21:3001"
-          
-      - name: 🧹 Cleanup
-        if: always()
-        run: rm -rf ~/.ssh/oracle_key ~/.ssh/config deploy.tar.gz

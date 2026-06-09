@@ -15,6 +15,7 @@ import statsRoutes from '../features/stats/stats.routes.js';
 import backupRoutes from '../features/backup/backup.routes.js';
 import testConnectionRoutes from '../features/test-connection/test-connection.routes.js';
 import priceAlertRoutes from '../features/price-alert/price-alert.routes.js';
+import deployRoutes from '../features/deploy/deploy.routes.js';
 
 declare module 'express-session' {
   interface SessionData {
@@ -56,6 +57,7 @@ app.use('/api/whatsapp', whatsappRoutes);
 app.use('/api/stats', statsRoutes);
 app.use('/api/backup', backupRoutes);
 app.use('/api/test', testConnectionRoutes);
+app.use('/api/deploy', deployRoutes);
 app.use('/api/price-alerts', priceAlertRoutes);
 
 // Serve arquivos estáticos do frontend
