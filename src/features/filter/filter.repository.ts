@@ -50,3 +50,25 @@ export const deleteCategory = async (id: number) => {
   const db = await getDb();
   await db.run('DELETE FROM categories WHERE id = ?', id);
 };
+
+export const updateCategory = async (id: number, data: any) => {
+  const db = await getDb();
+  await db.run(
+    "UPDATE categories SET name = COALESCE(?, name), color = COALESCE(?, color) WHERE id = ?",
+    data.name || null,
+    data.color || null,
+    id
+  );
+};
+
+export const updateFilter = async (id: number, data: any) => {
+  const db = await getDb();
+  const keywords = data.keywords ? (Array.isArray(data.keywords) ? data.keywords.join(",") : data.keywords) : null;
+  await db.run(
+    "UPDATE filters SET name = COALESCE(?, name), type = COALESCE(?, type), keywords = COALESCE(?, keywords) WHERE id = ?",
+    data.name || null,
+    data.type || null,
+    keywords,
+    id
+  );
+};
