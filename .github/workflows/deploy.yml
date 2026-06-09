@@ -1,0 +1,78 @@
+name: 🚀 Deploy to Oracle Cloud
+
+on:
+  push:
+    branches: [main, master]
+
+jobs:
+  deploy:
+    name: Deploy to Oracle VM
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          
+      - name: 📦 Install dependencies
+        run: npm ci
+        
+      - name: 🔨 Build application
+        run: npm run build
+        
+      - name: 📂 Create deployment package
+        run: |
+          mkdir -p deploy
+          cp -r dist/ deploy/
+          cp -r public/ deploy/
+          cp package*.json deploy/
+          cp ecosystem.config.* deploy/ 2>/dev/null || true
+          tar -czf deploy.tar.gz deploy/
+          
+      - name: 🚀 Deploy to Oracle VM via SCP
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.ORACLE_HOST }}
+          username: ${{ secrets.ORACLE_USER }}
+          key: ${{ secrets.ORACLE_SSH_KEY }}
+          source: "deploy.tar.gz"
+          target: "~/enviaPromo/"
+          overwrite: true
+          
+      - name: 🔄 Restart application via SSH
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.ORACLE_HOST }}
+          username: ${{ secrets.ORACLE_USER }}
+          key: ${{ secrets.ORACLE_SSH_KEY }}
+          script_stop: true
+          script: |
+            echo "🚀 Iniciando deploy..."
+            cd ~/enviaPromo
+            
+            echo "📦 Extraindo arquivos..."
+            tar -xzf deploy.tar.gz
+            cp -r deploy/dist/* dist/ 2>/dev/null || cp -r deploy/dist dist-new && rm -rf dist && mv dist-new dist
+            cp -r deploy/public/* public/ 2>/dev/null || true
+            cp deploy/package*.json ./ 2>/dev/null || true
+            rm -rf deploy deploy.tar.gz
+            
+            echo "📥 Instalando dependencias..."
+            npm ci --production
+            
+            echo "🔄 Reiniciando PM2..."
+            pm2 restart promo-monitor || pm2 start dist/index.js --name promo-monitor
+            pm2 save
+            
+            echo "✅ Deploy concluido com sucesso!"
+            echo "🌐 URL: http://${{ secrets.ORACLE_HOST }}:3001"
+            
+      - name: ✅ Notify success
+        run: |
+          echo "🎉 Deploy realizado com sucesso!"
+          echo "🌐 Aplicacao disponivel em: http://${{ secrets.ORACLE_HOST }}:3001"
