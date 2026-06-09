@@ -83,3 +83,4 @@ scripts/           # Deploy scripts
 ## 📄 Licença
 
 MIT
+# Deploy Auto Test
