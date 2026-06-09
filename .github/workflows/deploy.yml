@@ -33,45 +33,32 @@ jobs:
           cp package*.json deploy/
           tar -czf deploy.tar.gz deploy/
           
-      - name: 🚀 Deploy to Oracle VM
-        uses: appleboy/ssh-action@v1.0.0
-        with:
-          host: 136.248.109.21
-          username: ubuntu
-          key: ${{ secrets.ORACLE_SSH_KEY }}
-          script_stop: true
-          script: |
-            echo "🚀 Iniciando deploy..."
-            cd ~/enviaPromo
-            
-            echo "📦 Recebendo arquivos..."
-            # O SCP sera feito pelo appleboy/scp-action em versao futura
-            # Por enquanto, fazemos o deploy via script
-            
-      - name: 📤 Upload deploy package to VM
+      - name: 🔑 Setup SSH
         run: |
-          # Criar arquivo de chave temporario
-          echo "${{ secrets.ORACLE_SSH_KEY }}" > /tmp/oracle_key.pem
-          chmod 600 /tmp/oracle_key.pem
+          mkdir -p ~/.ssh
+          echo "${{ secrets.ORACLE_SSH_KEY }}" > ~/.ssh/oracle_key
+          chmod 600 ~/.ssh/oracle_key
+          cat >> ~/.ssh/config << EOF
+          Host oracle
+            HostName 136.248.109.21
+            User ubuntu
+            IdentityFile ~/.ssh/oracle_key
+            StrictHostKeyChecking no
+            UserKnownHostsFile /dev/null
+          EOF
+          chmod 600 ~/.ssh/config
           
-          # Enviar arquivo via SCP
-          scp -i /tmp/oracle_key.pem -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null deploy.tar.gz ubuntu@136.248.109.21:~/enviaPromo/
-          
-          # Limpar chave
-          rm -f /tmp/oracle_key.pem
-          
-      - name: 🔄 Restart application on VM
+      - name: 📤 Upload and Deploy
         run: |
-          # Criar arquivo de chave temporario
-          echo "${{ secrets.ORACLE_SSH_KEY }}" > /tmp/oracle_key.pem
-          chmod 600 /tmp/oracle_key.pem
+          echo "📤 Enviando pacote para VM..."
+          scp -F ~/.ssh/config deploy.tar.gz oracle:~/enviaPromo/
           
-          # Executar comandos via SSH
-          ssh -i /tmp/oracle_key.pem -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@136.248.109.21 << 'EOF'
+          echo "🚀 Executando deploy na VM..."
+          ssh -F ~/.ssh/config oracle << 'REMOTE_EOF'
             cd ~/enviaPromo
             echo "📦 Extraindo arquivos..."
             tar -xzf deploy.tar.gz
-            cp -r deploy/dist/* dist/ 2>/dev/null || cp -r deploy/dist dist-new && rm -rf dist && mv dist-new dist
+            cp -r deploy/dist/* dist/ 2>/dev/null || (cp -r deploy/dist dist-new && rm -rf dist && mv dist-new dist)
             cp -r deploy/public/* public/ 2>/dev/null || true
             cp deploy/package*.json ./ 2>/dev/null || true
             rm -rf deploy deploy.tar.gz
@@ -83,14 +70,12 @@ jobs:
             pm2 restart promo-monitor || pm2 start dist/index.js --name promo-monitor
             pm2 save
             
-            echo "✅ Deploy concluido com sucesso!"
-            echo "🌐 URL: http://136.248.109.21:3001"
-          EOF
+            echo "✅ Deploy concluido!"
+          REMOTE_EOF
           
-          # Limpar chave
-          rm -f /tmp/oracle_key.pem
-          
-      - name: ✅ Notify success
-        run: |
           echo "🎉 Deploy realizado com sucesso!"
-          echo "🌐 Aplicacao disponivel em: http://136.248.109.21:3001"
+          echo "🌐 Aplicacao: http://136.248.109.21:3001"
+          
+      - name: 🧹 Cleanup
+        if: always()
+        run: rm -rf ~/.ssh/oracle_key ~/.ssh/config deploy.tar.gz
