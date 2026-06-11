@@ -6,7 +6,10 @@ const router = Router();
 
 router.get('/', requireAuth, filterController.list);
 router.post('/categories', requireAuth, filterController.createCategory);
+router.put('/categories/:id', requireAuth, filterController.updateCategory);
+router.delete('/categories/:id', requireAuth, filterController.deleteCategory);
 router.post('/', requireAuth, filterController.createFilter);
+router.put('/:id', requireAuth, filterController.updateFilter);
 router.post('/:id/toggle', requireAuth, filterController.toggle);
 router.delete('/:id', requireAuth, filterController.remove);
 

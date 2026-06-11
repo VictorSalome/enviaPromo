@@ -25,6 +25,42 @@ export const create = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
+export const update = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const id = Number(req.params.id);
+    const { productName, targetPrice } = req.body;
+
+    if (productName === undefined && targetPrice === undefined) {
+      res.status(400).json({ success: false, message: 'Nenhum campo fornecido para atualização' });
+      return;
+    }
+
+    const fields: string[] = [];
+    const values: (string | number)[] = [];
+
+    if (productName !== undefined) {
+      fields.push('product_name = ?');
+      values.push(productName);
+    }
+    if (targetPrice !== undefined) {
+      fields.push('target_price = ?');
+      values.push(targetPrice);
+    }
+
+    values.push(id);
+
+    const db = await getDb();
+    await db.run(
+      `UPDATE price_alerts SET ${fields.join(', ')} WHERE id = ?`,
+      ...values
+    );
+
+    res.json({ success: true, message: 'Alerta atualizado' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Erro ao atualizar alerta' });
+  }
+};
+
 export const remove = async (req: Request, res: Response): Promise<void> => {
   try {
     const id = Number(req.params.id);

@@ -1,50 +1,618 @@
 <!DOCTYPE html>
-<html lang="pt-BR" data-theme="dark">
+<html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login - Promo Monitor</title>
-  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.2/dist/full.min.css" rel="stylesheet">
-  <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="min-h-screen flex items-center justify-center bg-base-200">
-  <div class="card w-96 bg-base-100 shadow-xl">
-    <div class="card-body">
-      <h2 class="card-title text-2xl text-center mb-4">🎯 Promo Monitor</h2>
-      <p class="text-center text-base-content/60 mb-6">Faça login para acessar</p>
+  <title>Promo Monitor // ACESSO RESTRITO</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary: #0a0a0f;
+      --bg-secondary: #111118;
+      --bg-card: rgba(17, 17, 24, 0.85);
+      --neon-red: #ff3366;
+      --neon-cyan: #00f0ff;
+      --neon-green: #00ff88;
+      --neon-yellow: #ffcc00;
+      --text-primary: #e8e8f0;
+      --text-secondary: #8890a0;
+      --text-muted: #556070;
+      --border-glow: rgba(0, 240, 255, 0.15);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Rajdhani', sans-serif;
+      background: var(--bg-primary);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Background Grid Animation */
+    .bg-grid {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: 
+        linear-gradient(rgba(0, 240, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 240, 255, 0.03) 1px, transparent 1px);
+      background-size: 50px 50px;
+      animation: gridMove 20s linear infinite;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    @keyframes gridMove {
+      0% { transform: perspective(500px) rotateX(60deg) translateY(0); }
+      100% { transform: perspective(500px) rotateX(60deg) translateY(50px); }
+    }
+
+    /* Floating Particles */
+    .particles {
+      position: fixed;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .particle {
+      position: absolute;
+      width: 2px;
+      height: 2px;
+      background: var(--neon-cyan);
+      border-radius: 50%;
+      opacity: 0;
+      animation: float 8s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { opacity: 0; transform: translateY(0) scale(0); }
+      10% { opacity: 0.8; }
+      50% { opacity: 0.4; transform: translateY(-100px) scale(1); }
+      90% { opacity: 0.8; }
+    }
+
+    /* Scan Line Effect */
+    .scan-line {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: linear-gradient(90deg, transparent, var(--neon-cyan), transparent);
+      opacity: 0.3;
+      animation: scan 6s linear infinite;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    @keyframes scan {
+      0% { top: -10px; }
+      100% { top: 100vh; }
+    }
+
+    /* Vignette */
+    .vignette {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.6) 100%);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* Corner Decorations */
+    .corner {
+      position: fixed;
+      width: 60px;
+      height: 60px;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .corner::before, .corner::after {
+      content: '';
+      position: absolute;
+      background: var(--neon-cyan);
+      opacity: 0.6;
+    }
+
+    .corner-tl { top: 30px; left: 30px; }
+    .corner-tl::before { width: 30px; height: 2px; top: 0; left: 0; }
+    .corner-tl::after { width: 2px; height: 30px; top: 0; left: 0; }
+
+    .corner-tr { top: 30px; right: 30px; transform: rotate(90deg); }
+    .corner-tr::before { width: 30px; height: 2px; top: 0; left: 0; }
+    .corner-tr::after { width: 2px; height: 30px; top: 0; left: 0; }
+
+    .corner-bl { bottom: 30px; left: 30px; transform: rotate(-90deg); }
+    .corner-bl::before { width: 30px; height: 2px; top: 0; left: 0; }
+    .corner-bl::after { width: 2px; height: 30px; top: 0; left: 0; }
+
+    .corner-br { bottom: 30px; right: 30px; transform: rotate(180deg); }
+    .corner-br::before { width: 30px; height: 2px; top: 0; left: 0; }
+    .corner-br::after { width: 2px; height: 30px; top: 0; left: 0; }
+
+    /* Status Bar */
+    .status-bar {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 20px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--text-muted);
+      z-index: 3;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    .status-dot {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--neon-green);
+      margin-right: 6px;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; box-shadow: 0 0 5px var(--neon-green); }
+      50% { opacity: 0.4; box-shadow: 0 0 15px var(--neon-green); }
+    }
+
+    /* Main Container */
+    .login-container {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      max-width: 420px;
+      padding: 0 20px;
+    }
+
+    .login-card {
+      background: var(--bg-card);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(0, 240, 255, 0.1);
+      border-radius: 4px;
+      padding: 48px 40px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .login-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--neon-cyan), transparent);
+      animation: shimmer 3s ease-in-out infinite;
+    }
+
+    @keyframes shimmer {
+      0%, 100% { opacity: 0.3; }
+      50% { opacity: 1; }
+    }
+
+    /* Logo Area */
+    .logo-area {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .logo-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+      display: inline-block;
+      animation: logoFloat 4s ease-in-out infinite;
+    }
+
+    @keyframes logoFloat {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+
+    .logo-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--text-primary);
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      line-height: 1.2;
+    }
+
+    .logo-title span {
+      color: var(--neon-red);
+      text-shadow: 0 0 20px rgba(255, 51, 102, 0.5);
+    }
+
+    .logo-subtitle {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--neon-cyan);
+      letter-spacing: 6px;
+      text-transform: uppercase;
+      margin-top: 8px;
+      opacity: 0.7;
+    }
+
+    /* Divider */
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 28px 0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--text-muted);
+      letter-spacing: 2px;
+    }
+
+    .divider::before, .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(0, 240, 255, 0.3), transparent);
+    }
+
+    /* Form Fields */
+    .form-group {
+      margin-bottom: 24px;
+      position: relative;
+    }
+
+    .form-label {
+      display: block;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--neon-cyan);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+      opacity: 0.8;
+    }
+
+    .input-wrapper {
+      position: relative;
+    }
+
+    .form-input {
+      width: 100%;
+      background: rgba(10, 10, 15, 0.8);
+      border: 1px solid rgba(0, 240, 255, 0.15);
+      border-radius: 2px;
+      padding: 14px 16px;
+      color: var(--text-primary);
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 16px;
+      font-weight: 500;
+      letter-spacing: 1px;
+      outline: none;
+      transition: all 0.3s ease;
+    }
+
+    .form-input::placeholder {
+      color: var(--text-muted);
+      font-weight: 400;
+    }
+
+    .form-input:focus {
+      border-color: var(--neon-cyan);
+      box-shadow: 
+        0 0 0 1px rgba(0, 240, 255, 0.2),
+        0 0 20px rgba(0, 240, 255, 0.1);
+      background: rgba(10, 10, 15, 0.95);
+    }
+
+    .input-icon {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 14px;
+      opacity: 0.4;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .form-input:focus + .input-icon {
+      opacity: 0.8;
+    }
+
+    /* Submit Button */
+    .submit-btn {
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, var(--neon-red), #ff5588);
+      border: none;
+      border-radius: 2px;
+      color: white;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 20px rgba(255, 51, 102, 0.3);
+    }
+
+    .submit-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+      transition: left 0.5s ease;
+    }
+
+    .submit-btn:hover::before {
+      left: 100%;
+    }
+
+    .submit-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(255, 51, 102, 0.5);
+    }
+
+    .submit-btn:active {
+      transform: translateY(0);
+    }
+
+    .submit-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* Error Message */
+    .error-msg {
+      display: none;
+      margin-top: 20px;
+      padding: 12px 16px;
+      background: rgba(255, 51, 102, 0.1);
+      border: 1px solid rgba(255, 51, 102, 0.3);
+      border-radius: 2px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--neon-red);
+      text-align: center;
+      animation: errorShake 0.5s ease;
+    }
+
+    .error-msg.show {
+      display: block;
+    }
+
+    @keyframes errorShake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-8px); }
+      75% { transform: translateX(8px); }
+    }
+
+    /* Loading Animation */
+    .loading {
+      display: none;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .loading.show {
+      display: block;
+    }
+
+    .loading-spinner {
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Footer */
+    .login-footer {
+      text-align: center;
+      margin-top: 32px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      color: var(--text-muted);
+      letter-spacing: 2px;
+      opacity: 0.5;
+    }
+
+    /* Glitch Effect on Hover */
+    .glitch-hover:hover {
+      animation: glitch 0.3s ease;
+    }
+
+    @keyframes glitch {
+      0% { transform: translate(0); }
+      20% { transform: translate(-2px, 2px); }
+      40% { transform: translate(-2px, -2px); }
+      60% { transform: translate(2px, 2px); }
+      80% { transform: translate(2px, -2px); }
+      100% { transform: translate(0); }
+    }
+
+    /* Responsive */
+    @media (max-width: 480px) {
+      .login-card {
+        padding: 36px 24px;
+      }
       
-      <form id="loginForm" class="space-y-4">
-        <div class="form-control">
-          <label class="label">
-            <span class="label-text">Usuário</span>
-          </label>
-          <input type="text" id="username" name="username" class="input input-bordered" placeholder="admin" required>
+      .logo-title {
+        font-size: 22px;
+      }
+      
+      .corner {
+        width: 40px;
+        height: 40px;
+      }
+      
+      .corner::before { width: 20px; }
+      .corner::after { height: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Background Effects -->
+  <div class="bg-grid"></div>
+  <div class="particles" id="particles"></div>
+  <div class="scan-line"></div>
+  <div class="vignette"></div>
+  
+  <!-- Corner Decorations -->
+  <div class="corner corner-tl"></div>
+  <div class="corner corner-tr"></div>
+  <div class="corner corner-bl"></div>
+  <div class="corner corner-br"></div>
+  
+  <!-- Status Bar -->
+  <div class="status-bar">
+    <span><span class="status-dot"></span>Sistema Online</span>
+    <span>v2.0.0</span>
+    <span id="clock">00:00:00</span>
+  </div>
+
+  <!-- Main Login Container -->
+  <div class="login-container">
+    <div class="login-card glitch-hover">
+      <!-- Logo -->
+      <div class="logo-area">
+        <div class="logo-icon">🎯</div>
+        <h1 class="logo-title">Promo<span>Monitor</span></h1>
+        <p class="logo-subtitle">Sistema de Vigilância de Preços</p>
+      </div>
+      
+      <!-- Divider -->
+      <div class="divider">Autenticação Requerida</div>
+      
+      <!-- Form -->
+      <form id="loginForm">
+        <div class="form-group">
+          <label class="form-label">// Identificação</label>
+          <div class="input-wrapper">
+            <input 
+              type="text" 
+              id="username" 
+              name="username" 
+              class="form-input" 
+              placeholder="Digite seu usuário..." 
+              required
+              autocomplete="username"
+            >
+            <span class="input-icon">👤</span>
+          </div>
         </div>
         
-        <div class="form-control">
-          <label class="label">
-            <span class="label-text">Senha</span>
-          </label>
-          <input type="password" id="password" name="password" class="input input-bordered" placeholder="••••••" required>
+        <div class="form-group">
+          <label class="form-label">// Credencial de Acesso</label>
+          <div class="input-wrapper">
+            <input 
+              type="password" 
+              id="password" 
+              name="password" 
+              class="form-input" 
+              placeholder="Digite sua senha..." 
+              required
+              autocomplete="current-password"
+            >
+            <span class="input-icon">🔒</span>
+          </div>
         </div>
         
-        <button type="submit" class="btn btn-primary w-full">
-          Entrar
+        <button type="submit" class="submit-btn" id="submitBtn">
+          <span id="btnText">Iniciar Sessão</span>
+          <div class="loading" id="btnLoading">
+            <div class="loading-spinner"></div>
+          </div>
         </button>
       </form>
       
-      <div id="errorMessage" class="alert alert-error mt-4 hidden">
-        <span>Usuário ou senha inválidos</span>
+      <!-- Error Message -->
+      <div class="error-msg" id="errorMessage">
+        ⚠ Acesso Negado: Credenciais Inválidas
+      </div>
+      
+      <!-- Footer -->
+      <div class="login-footer">
+        PROMO MONITOR v2.0 // ORACLE CLOUD // 24/7 UPTIME
       </div>
     </div>
   </div>
 
   <script>
+    // Generate Particles
+    const particlesContainer = document.getElementById('particles');
+    for (let i = 0; i < 30; i++) {
+      const particle = document.createElement('div');
+      particle.className = 'particle';
+      particle.style.left = Math.random() * 100 + '%';
+      particle.style.top = Math.random() * 100 + '%';
+      particle.style.animationDelay = Math.random() * 8 + 's';
+      particle.style.animationDuration = (6 + Math.random() * 4) + 's';
+      particlesContainer.appendChild(particle);
+    }
+
+    // Live Clock
+    function updateClock() {
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString('pt-BR', { hour12: false });
+      document.getElementById('clock').textContent = timeStr;
+    }
+    updateClock();
+    setInterval(updateClock, 1000);
+
+    // Login Handler
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       
       const username = document.getElementById('username').value;
       const password = document.getElementById('password').value;
+      const submitBtn = document.getElementById('submitBtn');
+      const btnText = document.getElementById('btnText');
+      const btnLoading = document.getElementById('btnLoading');
+      const errorMsg = document.getElementById('errorMessage');
+      
+      // Reset error
+      errorMsg.classList.remove('show');
+      
+      // Show loading
+      submitBtn.disabled = true;
+      btnText.style.opacity = '0';
+      btnLoading.classList.add('show');
       
       try {
         const response = await fetch('/api/auth/login', {
@@ -55,15 +623,38 @@
         
         const data = await response.json();
         
+        // Hide loading
+        submitBtn.disabled = false;
+        btnText.style.opacity = '1';
+        btnLoading.classList.remove('show');
+        
         if (data.success) {
-          window.location.href = '/';
+          btnText.textContent = 'Acesso Concedido ✓';
+          submitBtn.style.background = 'linear-gradient(135deg, #00ff88, #00cc6a)';
+          submitBtn.style.boxShadow = '0 4px 20px rgba(0, 255, 136, 0.4)';
+          setTimeout(() => {
+            window.location.href = '/';
+          }, 800);
         } else {
-          document.getElementById('errorMessage').classList.remove('hidden');
+          errorMsg.classList.add('show');
+          document.getElementById('password').value = '';
+          document.getElementById('password').focus();
         }
       } catch (err) {
-        document.getElementById('errorMessage').classList.remove('hidden');
-        document.getElementById('errorMessage').querySelector('span').textContent = 'Erro de conexão';
+        submitBtn.disabled = false;
+        btnText.style.opacity = '1';
+        btnLoading.classList.remove('show');
+        errorMsg.textContent = '⚠ Erro de Conexão com o Servidor';
+        errorMsg.classList.add('show');
       }
+    });
+
+    // Remove error on input
+    document.getElementById('username').addEventListener('input', () => {
+      document.getElementById('errorMessage').classList.remove('show');
+    });
+    document.getElementById('password').addEventListener('input', () => {
+      document.getElementById('errorMessage').classList.remove('show');
     });
   </script>
 </body>

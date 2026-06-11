@@ -32,12 +32,13 @@ export const createFilter = async (req: Request, res: Response): Promise<void> =
   try {
     const { categoryId, name, type, keywords } = req.body;
     
-    if (!categoryId || !name || !keywords || !Array.isArray(keywords)) {
+    if (!categoryId || !name || !keywords) {
       res.status(400).json({ success: false, message: 'Dados inválidos' });
       return;
     }
     
-    const id = await filterRepo.createFilter({ categoryId, name, type: type || 'broad', keywords });
+    const keywordsStr = Array.isArray(keywords) ? keywords.join(',') : keywords;
+    const id = await filterRepo.createFilter({ categoryId, name, type: type || 'broad', keywords: keywordsStr });
     res.json({ success: true, message: 'Filtro criado', data: { id } });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Erro ao criar filtro' });
@@ -61,5 +62,37 @@ export const remove = async (req: Request, res: Response): Promise<void> => {
     res.json({ success: true, message: 'Filtro removido' });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Erro ao remover filtro' });
+  }
+};
+
+export const updateCategory = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const id = Number(req.params.id);
+    const { name, color } = req.body;
+    await filterRepo.updateCategory(id, { name, color });
+    res.json({ success: true, message: 'Categoria atualizada' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Erro ao atualizar categoria' });
+  }
+};
+
+export const deleteCategory = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const id = Number(req.params.id);
+    await filterRepo.deleteCategory(id);
+    res.json({ success: true, message: 'Categoria removida' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Erro ao remover categoria' });
+  }
+};
+
+export const updateFilter = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const id = Number(req.params.id);
+    const { name, type, keywords } = req.body;
+    await filterRepo.updateFilter(id, { name, type, keywords });
+    res.json({ success: true, message: 'Filtro atualizado' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Erro ao atualizar filtro' });
   }
 };
