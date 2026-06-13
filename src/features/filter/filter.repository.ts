@@ -46,23 +46,47 @@ export const deleteFilter = async (id: number) => {
   await db.run('DELETE FROM filters WHERE id = ?', id);
 };
 
-export const updateCategory = async (id: number, data: { name: string; color: string }) => {
-  const db = await getDb();
-  await db.run(
-    'UPDATE categories SET name = ?, color = ? WHERE id = ?',
-    data.name, data.color, id
-  );
-};
-
 export const deleteCategory = async (id: number) => {
   const db = await getDb();
   await db.run('DELETE FROM categories WHERE id = ?', id);
 };
 
-export const updateFilter = async (id: number, data: { name: string; type: string; keywords: string[] }) => {
+export const updateCategory = async (id: number, data: any) => {
   const db = await getDb();
   await db.run(
-    'UPDATE filters SET name = ?, type = ?, keywords = ? WHERE id = ?',
-    data.name, data.type, JSON.stringify(data.keywords), id
+    "UPDATE categories SET name = COALESCE(?, name), color = COALESCE(?, color) WHERE id = ?",
+    data.name || null,
+    data.color || null,
+    id
   );
+};
+
+export const updateFilter = async (id: number, data: any) => {
+  const db = await getDb();
+  const keywords = data.keywords ? (Array.isArray(data.keywords) ? data.keywords.join(",") : data.keywords) : null;
+  await db.run(
+    "UPDATE filters SET name = COALESCE(?, name), type = COALESCE(?, type), keywords = COALESCE(?, keywords) WHERE id = ?",
+    data.name || null,
+    data.type || null,
+    keywords,
+    id
+  );
+};
+
+export const toggleAllFilters = async (isActive: boolean) => {
+  const db = await getDb();
+  const value = isActive ? 1 : 0;
+  await db.run("UPDATE filters SET is_active = ?", value);
+};
+
+export const getActiveFiltersCount = async () => {
+  const db = await getDb();
+  const result = await db.get("SELECT COUNT(*) as count FROM filters WHERE is_active = 1");
+  return result?.count || 0;
+};
+
+export const getTotalFiltersCount = async () => {
+  const db = await getDb();
+  const result = await db.get("SELECT COUNT(*) as count FROM filters");
+  return result?.count || 0;
 };

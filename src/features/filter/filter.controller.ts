@@ -32,13 +32,12 @@ export const createFilter = async (req: Request, res: Response): Promise<void> =
   try {
     const { categoryId, name, type, keywords } = req.body;
     
-    if (!categoryId || !name || !keywords) {
+    if (!categoryId || !name || !keywords || !Array.isArray(keywords)) {
       res.status(400).json({ success: false, message: 'Dados inválidos' });
       return;
     }
     
-    const keywordsStr = Array.isArray(keywords) ? keywords.join(',') : keywords;
-    const id = await filterRepo.createFilter({ categoryId, name, type: type || 'broad', keywords: keywordsStr });
+    const id = await filterRepo.createFilter({ categoryId, name, type: type || 'broad', keywords });
     res.json({ success: true, message: 'Filtro criado', data: { id } });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Erro ao criar filtro' });
@@ -65,34 +64,22 @@ export const remove = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
-export const updateCategory = async (req: Request, res: Response): Promise<void> => {
+export const toggleAll = async (req: Request, res: Response): Promise<void> => {
   try {
-    const id = Number(req.params.id);
-    const { name, color } = req.body;
-    await filterRepo.updateCategory(id, { name, color });
-    res.json({ success: true, message: 'Categoria atualizada' });
+    const { isActive } = req.body;
+    await filterRepo.toggleAllFilters(isActive);
+    res.json({ success: true, message: isActive ? "Todos os filtros ativados" : "Todos os filtros desativados" });
   } catch (err) {
-    res.status(500).json({ success: false, message: 'Erro ao atualizar categoria' });
+    res.status(500).json({ success: false, message: "Erro ao alterar filtros" });
   }
 };
 
-export const deleteCategory = async (req: Request, res: Response): Promise<void> => {
+export const getStats = async (_req: Request, res: Response): Promise<void> => {
   try {
-    const id = Number(req.params.id);
-    await filterRepo.deleteCategory(id);
-    res.json({ success: true, message: 'Categoria removida' });
+    const active = await filterRepo.getActiveFiltersCount();
+    const total = await filterRepo.getTotalFiltersCount();
+    res.json({ success: true, data: { active, total } });
   } catch (err) {
-    res.status(500).json({ success: false, message: 'Erro ao remover categoria' });
-  }
-};
-
-export const updateFilter = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const id = Number(req.params.id);
-    const { name, type, keywords } = req.body;
-    await filterRepo.updateFilter(id, { name, type, keywords });
-    res.json({ success: true, message: 'Filtro atualizado' });
-  } catch (err) {
-    res.status(500).json({ success: false, message: 'Erro ao atualizar filtro' });
+    res.status(500).json({ success: false, message: "Erro ao obter estatísticas" });
   }
 };

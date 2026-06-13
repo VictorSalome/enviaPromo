@@ -1232,33 +1232,34 @@
           </div>
           
           <div class="card mb-6">
-            <div class="card-header" style="border-left: 4px solid var(--neon-cyan);">
-              <div class="card-title">
-                <i class="ph ph-faders" style="color: var(--neon-cyan);"></i>
+            <div class="card-body">
+              <div class="card-title mb-4" style="display: flex; align-items: center; gap: 8px;">
+                <i class="ph ph-faders"></i>
                 Modo de Captura
               </div>
-            </div>
-            <div class="card-body">
-              <div class="flex items-center justify-between mb-4">
-                <div>
-                  <div class="stat-label" style="color: var(--neon-cyan); margin-bottom: 4px;">
-                    <i class="ph ph-funnel"></i> Filtros
-                  </div>
-                  <div id="filter-mode-status" class="stat-value" style="font-size: 16px;">
-                    Carregando...
-                  </div>
-                </div>
-                <button id="filter-mode-toggle" onclick="toggleFilterMode()" class="btn btn-outline">
-                  <i class="ph ph-toggle-left" id="filter-mode-icon"></i>
-                  <span id="filter-mode-btn-text">Carregando...</span>
-                </button>
-              </div>
               
-              <div class="welcome-text" style="font-size: 13px; margin: 0;">
-                <i class="ph ph-info" style="color: var(--neon-cyan);"></i>
-                <span id="filter-mode-description">
-                  Quando desativado, todas as mensagens dos canais serão enviadas para o WhatsApp sem filtragem.
-                </span>
+              <div id="filter-mode-container" style="background: rgba(0, 240, 255, 0.05); border: 1px solid rgba(0, 240, 255, 0.2); border-radius: 4px; padding: 20px;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+                  <div>
+                    <div style="font-family: 'Rajdhani', sans-serif; font-weight: 600; font-size: 16px; color: var(--neon-cyan); letter-spacing: 1px; margin-bottom: 4px;">
+                      Filtros
+                    </div>
+                    <div id="filter-mode-status" style="font-size: 14px; color: var(--text-muted);">
+                      Carregando...
+                    </div>
+                  </div>
+                  <button id="filter-mode-toggle" onclick="toggleFilterMode()" class="btn btn-outline" style="min-width: 140px;">
+                    <i class="ph ph-toggle-left"></i>
+                    <span id="filter-mode-btn-text">Carregando...</span>
+                  </button>
+                </div>
+                
+                <div style="font-size: 13px; color: var(--text-muted); line-height: 1.5;">
+                  <i class="ph ph-info" style="color: var(--neon-cyan);"></i>
+                  <span id="filter-mode-description">
+                    Quando desativado, todas as mensagens dos canais serão enviadas para o WhatsApp sem filtragem.
+                  </span>
+                </div>
               </div>
             </div>
           </div>
