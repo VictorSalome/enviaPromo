@@ -13,25 +13,32 @@ export const list = async (_req: Request, res: Response): Promise<void> => {
 export const create = async (req: Request, res: Response): Promise<void> => {
   try {
     const { username, name } = req.body;
-    
-    if (!username) {
+
+    if (!username || username.trim() === '') {
       res.status(400).json({ success: false, message: 'Username é obrigatório' });
       return;
     }
-    
+
     // Garante que começa com @
-    const formattedUsername = username.startsWith('@') ? username : `@${username}`;
-    
+    const formattedUsername = username.trim().startsWith('@') ? username.trim() : `@${username.trim()}`;
+
+    // Verificar se canal já existe
+    const existing = await channelRepo.findByUsername(formattedUsername);
+    if (existing) {
+      res.status(409).json({ success: false, message: 'Canal já existe' });
+      return;
+    }
+
     const id = await channelRepo.create({
       username: formattedUsername,
       name: name || formattedUsername,
-      isActive: true
+      isActive: true,
     });
-    
+
     res.json({ success: true, message: 'Canal adicionado', data: { id } });
   } catch (err: any) {
     if (err.message?.includes('UNIQUE constraint failed')) {
-      res.status(400).json({ success: false, message: 'Canal já existe' });
+      res.status(409).json({ success: false, message: 'Canal já existe' });
     } else {
       res.status(500).json({ success: false, message: 'Erro ao adicionar canal' });
     }

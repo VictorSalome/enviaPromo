@@ -14,7 +14,24 @@ export const list = async (_req: Request, res: Response): Promise<void> => {
 export const create = async (req: Request, res: Response): Promise<void> => {
   try {
     const { productName, targetPrice } = req.body;
+    
+    if (!productName || !targetPrice) {
+      res.status(400).json({ success: false, message: 'Nome do produto e preço alvo são obrigatórios' });
+      return;
+    }
+    
     const db = await getDb();
+    
+    // Verificar se já existe alerta para o mesmo produto+preço
+    const existing = await db.get(
+      'SELECT * FROM price_alerts WHERE product_name = ? AND target_price = ? AND is_active = 1',
+      productName, targetPrice
+    );
+    if (existing) {
+      res.status(409).json({ success: false, message: 'Já existe um alerta para este produto com este preço' });
+      return;
+    }
+    
     const result = await db.run(
       'INSERT INTO price_alerts (product_name, target_price) VALUES (?, ?)',
       productName, targetPrice
@@ -22,42 +39,6 @@ export const create = async (req: Request, res: Response): Promise<void> => {
     res.json({ success: true, message: 'Alerta criado', data: { id: result.lastID } });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Erro ao criar alerta' });
-  }
-};
-
-export const update = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const id = Number(req.params.id);
-    const { productName, targetPrice } = req.body;
-
-    if (productName === undefined && targetPrice === undefined) {
-      res.status(400).json({ success: false, message: 'Nenhum campo fornecido para atualização' });
-      return;
-    }
-
-    const fields: string[] = [];
-    const values: (string | number)[] = [];
-
-    if (productName !== undefined) {
-      fields.push('product_name = ?');
-      values.push(productName);
-    }
-    if (targetPrice !== undefined) {
-      fields.push('target_price = ?');
-      values.push(targetPrice);
-    }
-
-    values.push(id);
-
-    const db = await getDb();
-    await db.run(
-      `UPDATE price_alerts SET ${fields.join(', ')} WHERE id = ?`,
-      ...values
-    );
-
-    res.json({ success: true, message: 'Alerta atualizado' });
-  } catch (err) {
-    res.status(500).json({ success: false, message: 'Erro ao atualizar alerta' });
   }
 };
 

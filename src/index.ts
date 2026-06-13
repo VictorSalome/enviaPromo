@@ -1,3 +1,11 @@
+// Handlers de erro global para evitar crash em erros n00e3o tratados (ex: timeout do Telegram)
+process.on('unhandledRejection', (reason, _promise) => {
+  console.error('[Unhandled Rejection]', reason);
+});
+process.on('uncaughtException', (err) => {
+  console.error('[Uncaught Exception]', err);
+});
+
 import { app } from './core/server.js';
 import { config } from './core/config.js';
 import { initDb } from './core/database.js';

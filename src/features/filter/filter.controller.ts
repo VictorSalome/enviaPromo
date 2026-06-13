@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+ import { Request, Response } from 'express';
 import * as filterRepo from './filter.repository.js';
 
 export const list = async (_req: Request, res: Response): Promise<void> => {
@@ -21,10 +21,48 @@ export const list = async (_req: Request, res: Response): Promise<void> => {
 export const createCategory = async (req: Request, res: Response): Promise<void> => {
   try {
     const { name, color, icon } = req.body;
-    const id = await filterRepo.createCategory({ name, color, icon });
+    
+    if (!name || name.trim() === '') {
+      res.status(400).json({ success: false, message: 'Nome da categoria é obrigatório' });
+      return;
+    }
+    
+    // Verificar se categoria já existe
+    const existing = await filterRepo.findCategoryByName(name.trim());
+    if (existing) {
+      res.status(409).json({ success: false, message: 'Categoria já existe' });
+      return;
+    }
+    
+    const id = await filterRepo.createCategory({ name: name.trim(), color, icon });
     res.json({ success: true, message: 'Categoria criada', data: { id } });
+  } catch (err: any) {
+    if (err.message?.includes('UNIQUE constraint failed')) {
+      res.status(409).json({ success: false, message: 'Categoria já existe' });
+    } else {
+      res.status(500).json({ success: false, message: 'Erro ao criar categoria' });
+    }
+  }
+};
+
+export const updateCategory = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const id = Number(req.params.id);
+    const { name, color } = req.body;
+    
+    if (name && name.trim() !== '') {
+      // Verificar se outra categoria já tem esse nome
+      const existing = await filterRepo.findCategoryByName(name.trim());
+      if (existing && existing.id !== id) {
+        res.status(409).json({ success: false, message: 'Já existe uma categoria com esse nome' });
+        return;
+      }
+    }
+    
+    await filterRepo.updateCategory(id, { name: name?.trim(), color });
+    res.json({ success: true, message: 'Categoria atualizada' });
   } catch (err) {
-    res.status(500).json({ success: false, message: 'Erro ao criar categoria' });
+    res.status(500).json({ success: false, message: 'Erro ao atualizar categoria' });
   }
 };
 
@@ -32,15 +70,59 @@ export const createFilter = async (req: Request, res: Response): Promise<void> =
   try {
     const { categoryId, name, type, keywords } = req.body;
     
-    if (!categoryId || !name || !keywords || !Array.isArray(keywords)) {
+    if (!categoryId || !name || !keywords) {
       res.status(400).json({ success: false, message: 'Dados inválidos' });
       return;
     }
     
-    const id = await filterRepo.createFilter({ categoryId, name, type: type || 'broad', keywords });
+    if (!name.trim()) {
+      res.status(400).json({ success: false, message: 'Nome do filtro é obrigatório' });
+      return;
+    }
+    
+    // Verificar se filtro já existe na categoria
+    const existing = await filterRepo.findFilterByNameAndCategory(name.trim(), Number(categoryId));
+    if (existing) {
+      res.status(409).json({ success: false, message: 'Já existe um filtro com esse nome nesta categoria' });
+      return;
+    }
+    
+    const keywordsArray = Array.isArray(keywords) ? keywords : keywords.split(',').map((k: string) => k.trim()).filter((k: string) => k);
+    
+    const id = await filterRepo.createFilter({ categoryId: Number(categoryId), name: name.trim(), type: type || 'broad', keywords: keywordsArray });
     res.json({ success: true, message: 'Filtro criado', data: { id } });
+  } catch (err: any) {
+    if (err.message?.includes('UNIQUE constraint failed')) {
+      res.status(409).json({ success: false, message: 'Filtro já existe nesta categoria' });
+    } else {
+      res.status(500).json({ success: false, message: 'Erro ao criar filtro' });
+    }
+  }
+};
+
+export const updateFilter = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const id = Number(req.params.id);
+    const { name, type, keywords } = req.body;
+    
+    // Buscar filtro atual para pegar category_id
+    const allFilters = await filterRepo.findAllFilters();
+    const currentFilter = allFilters.find((f: any) => f.id === id);
+    
+    if (name && name.trim() !== '' && currentFilter) {
+      // Verificar se outro filtro na mesma categoria já tem esse nome
+      const existing = await filterRepo.findFilterByNameAndCategory(name.trim(), currentFilter.category_id);
+      if (existing && existing.id !== id) {
+        res.status(409).json({ success: false, message: 'Já existe um filtro com esse nome nesta categoria' });
+        return;
+      }
+    }
+    
+    const keywordsValue = Array.isArray(keywords) ? keywords : (keywords ? keywords.split(',').map((k: string) => k.trim()).filter((k: string) => k) : null);
+    await filterRepo.updateFilter(id, { name: name?.trim(), type, keywords: keywordsValue });
+    res.json({ success: true, message: 'Filtro atualizado' });
   } catch (err) {
-    res.status(500).json({ success: false, message: 'Erro ao criar filtro' });
+    res.status(500).json({ success: false, message: 'Erro ao atualizar filtro' });
   }
 };
 
@@ -68,9 +150,19 @@ export const toggleAll = async (req: Request, res: Response): Promise<void> => {
   try {
     const { isActive } = req.body;
     await filterRepo.toggleAllFilters(isActive);
-    res.json({ success: true, message: isActive ? "Todos os filtros ativados" : "Todos os filtros desativados" });
+    res.json({ success: true, message: isActive ? 'Todos os filtros ativados' : 'Todos os filtros desativados' });
   } catch (err) {
-    res.status(500).json({ success: false, message: "Erro ao alterar filtros" });
+    res.status(500).json({ success: false, message: 'Erro ao alterar filtros' });
+  }
+};
+
+export const deleteCategory = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const id = Number(req.params.id);
+    await filterRepo.deleteCategory(id);
+    res.json({ success: true, message: 'Categoria removida' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Erro ao remover categoria' });
   }
 };
 
@@ -80,6 +172,6 @@ export const getStats = async (_req: Request, res: Response): Promise<void> => {
     const total = await filterRepo.getTotalFiltersCount();
     res.json({ success: true, data: { active, total } });
   } catch (err) {
-    res.status(500).json({ success: false, message: "Erro ao obter estatísticas" });
+    res.status(500).json({ success: false, message: 'Erro ao obter estatísticas' });
   }
 };

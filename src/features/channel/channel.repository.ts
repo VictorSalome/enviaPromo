@@ -11,6 +11,11 @@ export const findById = async (id: number): Promise<Channel | undefined> => {
   return db.get('SELECT * FROM channels WHERE id = ?', id);
 };
 
+export const findByUsername = async (username: string): Promise<Channel | undefined> => {
+  const db = await getDb();
+  return db.get('SELECT * FROM channels WHERE username = ?', username);
+};
+
 export const create = async (channel: Omit<Channel, 'id' | 'createdAt'>): Promise<number> => {
   const db = await getDb();
   const result = await db.run(
