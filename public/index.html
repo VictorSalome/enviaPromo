@@ -426,7 +426,7 @@
 
       .sidebar-overlay {
         display: none;
-        position: static;
+        position: fixed;
         top: 0;
         left: 0;
         width: 100%;
@@ -609,12 +609,17 @@
           transparent
         );
         opacity: 0.6;
+        transition: opacity 0.3s ease;
+      }
+
+      .stat-card:hover::before {
+        opacity: 1;
       }
 
       .stat-card:hover {
         transform: translateY(-4px);
-        border-color: rgba(0, 240, 255, 0.15);
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        border-color: var(--accent-color);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 20px color-mix(in srgb, var(--accent-color) 15%, transparent);
       }
 
       .stat-card.cyan {
@@ -2012,8 +2017,12 @@
       }
 
       function toggleSidebar() {
-        document.getElementById("sidebar").classList.toggle("open");
-        document.getElementById("sidebarOverlay").classList.toggle("show");
+        const sidebar = document.getElementById("sidebar");
+        const overlay = document.getElementById("sidebarOverlay");
+        if (sidebar && overlay) {
+          sidebar.classList.toggle("open");
+          overlay.classList.toggle("show");
+        }
       }
 
       async function logout() {
@@ -2886,6 +2895,8 @@
         const btnTextEl = document.getElementById("filter-mode-btn-text");
         const descEl = document.getElementById("filter-mode-description");
         const container = document.getElementById("filter-mode-container");
+
+        if (!statusEl || !btnTextEl || !descEl || !container) return;
 
         if (filtersActive) {
           statusEl.innerHTML =

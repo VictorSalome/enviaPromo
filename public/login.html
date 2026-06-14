@@ -800,6 +800,9 @@
           const btnText = document.getElementById("btnText");
           const btnLoading = document.getElementById("btnLoading");
           const errorMsg = document.getElementById("errorMessage");
+          const passwordInput = document.getElementById("password");
+
+          if (!submitBtn || !btnText || !btnLoading || !errorMsg || !passwordInput) return;
 
           // Reset error
           errorMsg.classList.remove("show");
