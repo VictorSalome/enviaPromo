@@ -1445,7 +1445,10 @@
       };
       document.getElementById('pageTitle').textContent = titles[section] || section;
       
-      if (window.innerWidth <= 1024) toggleSidebar();
+      if (window.innerWidth <= 1024) {
+        document.getElementById('sidebar').classList.remove('open');
+        document.getElementById('sidebarOverlay').classList.remove('show');
+      }
       
       if (section === 'telegram') loadTelegramConfig();
       if (section === 'filters') renderFilters();
@@ -1453,8 +1456,17 @@
     }
 
     function toggleSidebar() {
-      document.getElementById('sidebar').classList.toggle('open');
-      document.getElementById('sidebarOverlay').classList.toggle('show');
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('sidebarOverlay');
+      const isOpen = sidebar.classList.contains('open');
+      
+      if (isOpen) {
+        sidebar.classList.remove('open');
+        overlay.classList.remove('show');
+      } else {
+        sidebar.classList.add('open');
+        overlay.classList.add('show');
+      }
     }
 
     async function logout() {

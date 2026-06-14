@@ -24,18 +24,26 @@ export const saveConfig = async (config: Partial<TelegramConfig>): Promise<void>
   const db = await getDb();
   const existing = await getConfig();
   
+  // Only update fields that are provided (including empty strings to clear)
+  const apiId = config.apiId !== undefined ? config.apiId : undefined;
+  const apiHash = config.apiHash !== undefined ? config.apiHash : undefined;
+  const phone = config.phone !== undefined ? config.phone : undefined;
+  
   if (existing && existing.id) {
-    await db.run(
-      `UPDATE telegram_config 
-       SET api_id = COALESCE(?, api_id),
-           api_hash = COALESCE(?, api_hash),
-           phone = COALESCE(?, phone),
-           updated_at = CURRENT_TIMESTAMP
-       WHERE id = 1`,
-      config.apiId || null,
-      config.apiHash || null,
-      config.phone || null
-    );
+    const updates: string[] = [];
+    const params: any[] = [];
+    
+    if (apiId !== undefined) { updates.push('api_id = ?'); params.push(apiId); }
+    if (apiHash !== undefined) { updates.push('api_hash = ?'); params.push(apiHash); }
+    if (phone !== undefined) { updates.push('phone = ?'); params.push(phone); }
+    
+    if (updates.length > 0) {
+      params.push(1);
+      await db.run(
+        `UPDATE telegram_config SET ${updates.join(', ')}, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+        ...params
+      );
+    }
   } else {
     await db.run(
       `INSERT INTO telegram_config (id, api_id, api_hash, phone, is_connected)

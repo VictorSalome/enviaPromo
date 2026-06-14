@@ -52,6 +52,9 @@ const loadSectionData = async (section: string): Promise<void> => {
     case 'backup':
       // Não precisa carregar dados
       break;
+    case 'discord':
+      // Discord configurado via .env
+      break;
   }
 };
 
@@ -350,14 +353,14 @@ document.addEventListener('DOMContentLoaded', () => {
   loadMonitor();
 };
 
-// Test WhatsApp
-(window as any).testWhatsApp = async (): Promise<void> => {
-  const btn = document.getElementById('btn-test-whatsapp')!;
+// Test Discord
+(window as any).testDiscord = async (): Promise<void> => {
+  const btn = document.getElementById('btn-test-discord')!;
   btn.textContent = 'Enviando...';
   btn.disabled = true;
   
   try {
-    const res = await fetch('/api/whatsapp/test', { 
+    const res = await fetch('/api/discord/test', { 
       method: 'POST',
       credentials: 'include'
     });
@@ -366,8 +369,22 @@ document.addEventListener('DOMContentLoaded', () => {
   } catch (err) {
     alert('Erro ao enviar teste');
   } finally {
-    btn.textContent = '🧪 Testar WhatsApp';
+    btn.textContent = '🧪 Testar Discord';
     btn.disabled = false;
+  }
+};
+
+// Force verification
+(window as any).forceCheck = async (): Promise<void> => {
+  try {
+    const res = await fetch('/api/monitor/force-check', {
+      method: 'POST',
+      credentials: 'include'
+    });
+    const data = await res.json();
+    alert(data.message);
+  } catch (err) {
+    alert('Erro ao forçar verificação');
   }
 };
 

@@ -42,6 +42,27 @@ export const create = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
+export const update = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const id = Number(req.params.id);
+    const { productName, targetPrice } = req.body;
+    
+    if (!productName || !targetPrice) {
+      res.status(400).json({ success: false, message: 'Nome do produto e preço alvo são obrigatórios' });
+      return;
+    }
+    
+    const db = await getDb();
+    await db.run(
+      'UPDATE price_alerts SET product_name = ?, target_price = ? WHERE id = ?',
+      productName, targetPrice, id
+    );
+    res.json({ success: true, message: 'Alerta atualizado' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Erro ao atualizar alerta' });
+  }
+};
+
 export const remove = async (req: Request, res: Response): Promise<void> => {
   try {
     const id = Number(req.params.id);

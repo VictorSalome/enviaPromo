@@ -11,7 +11,7 @@ import {
   getActiveFiltersCount,
 } from "../filter/filter.repository.js";
 import { isDuplicate, addSentMessage } from "../dedup/dedup.repository.js";
-import { sendMessage } from "../whatsapp/whatsapp.service.js";
+import { sendDiscordPromo } from "../discord/discord.service.js";
 import { getMonitorStatus, setRunningState } from "./monitor.state.js";
 
 let client: TelegramClient | null = null;
@@ -44,13 +44,12 @@ export async function startTelegramMonitor(): Promise<void> {
     const tgConfig = await getConfig();
     if (!tgConfig || !tgConfig.apiId || !tgConfig.apiHash) {
       console.log("[Monitor] Configuração do Telegram não encontrada");
-      scheduleNextCheck();
       return;
     }
 
     // Verificar se está conectado
     if (!tgConfig.isConnected || !tgConfig.sessionString) {
-      console.log("[Monitor] Telegram não autenticado");
+      console.log("[Monitor] Telegram não autenticado. Aguardando autenticação...");
       scheduleNextCheck();
       return;
     }
@@ -76,8 +75,12 @@ export async function startTelegramMonitor(): Promise<void> {
     }
 
     if (!client || !client.connected) {
-      console.log("[Monitor] Reconectando ao Telegram...");
-      await client?.connect();
+      console.log("[Monitor] Cliente desconectado. Recriando conexão...");
+      if (client) {
+        try { await client.destroy(); } catch (e) {}
+        client = null;
+      }
+      await createClient(tgConfig);
     }
 
     console.log(
@@ -131,6 +134,7 @@ async function createClient(tgConfig: any): Promise<void> {
       connectionRetries: RETRY_CONFIG.maxRetries,
       useWSS: false,
       timeout: 30000,
+      autoReconnect: false,
     },
   );
   await client.connect();
@@ -240,6 +244,7 @@ async function processMessage(
         channelUsername,
         null,
         "Todas as Promoções",
+        message,
       );
     }
 
@@ -267,6 +272,7 @@ async function processMessage(
           channelUsername,
           message.id,
           filter.name,
+          message,
         );
         if (sent) return true;
       }
@@ -284,6 +290,7 @@ async function sendPromoMessage(
   channelUsername: string,
   messageId: number | null,
   filterName: string,
+  message?: any,
 ): Promise<boolean> {
   try {
     // Extrair informações com IA (mais inteligente)
@@ -304,8 +311,9 @@ async function sendPromoMessage(
       return false;
     }
 
-    // Criar mensagem inteligente (baseado no whatsapp-automation skill)
-    const messageText = formatSmartMessage(
+    const img = await extractImageUrl(text, message);
+
+    await sendDiscordPromo({
       product,
       price,
       originalPrice,
@@ -313,9 +321,10 @@ async function sendPromoMessage(
       store,
       link,
       filterName,
-    );
-
-    await sendMessage(messageText);
+      channel: channelUsername,
+      imageUrl: img?.url || null,
+      imageBuffer: img?.buffer || null,
+    });
 
     await addSentMessage({
       link,
@@ -333,6 +342,35 @@ async function sendPromoMessage(
     console.error("[Monitor] Erro ao enviar mensagem:", err);
     return false;
   }
+}
+
+// ========== EXTRATOR DE IMAGEM ==========
+
+const IMAGE_URL_REGEX = /https?:\/\/[^\s"'<>]+\.(?:jpg|jpeg|png|gif|webp)(?:\?[^\s"'<>]*)?/gi;
+
+async function extractImageUrl(
+  text: string,
+  message?: any,
+): Promise<{ url?: string; buffer?: { data: Buffer; ext: string } } | null> {
+  // 1. Tentar extrair URL de imagem do texto
+  const urlMatch = text.match(IMAGE_URL_REGEX);
+  if (urlMatch && urlMatch[0]) {
+    return { url: urlMatch[0] };
+  }
+
+  // 2. Tentar baixar foto do Telegram
+  if (message?.photo && client) {
+    try {
+      const buffer = await client.downloadMedia(message);
+      if (buffer && buffer instanceof Buffer) {
+        return { buffer: { data: buffer, ext: "png" } };
+      }
+    } catch {
+      // Silencioso — imagem é opcional
+    }
+  }
+
+  return null;
 }
 
 // ========== EXTRACTORES INTELIGENTES ==========
@@ -358,16 +396,16 @@ function extractProductName(text: string): string {
 }
 
 function extractPrice(text: string): number | null {
-  // Padrões de preço brasileiros (com e sem centavos)
   const patterns = [
-    // Com centavos
-    /(?:por|apenas|custando|preço|R\$)\s*[:\-]?\s*(?:R\$\s*)?(\d{1,3}(?:[.,]\d{3})*[.,]\d{2})/i,
-    /(?:R\$\s*)(\d{1,3}(?:[.,]\d{3})*[.,]\d{2})/,
-    /(\d{1,3}(?:[.,]\d{3})*[.,]\d{2})\s*(?:reais|r\$)/i,
+    // Com centavos — numbers WITH thousands separators (max 2 dígitos antes do separador)
+    // ou numbers WITHOUT separators (até 5 dígitos)
+    /(?:por|apenas|custando|preço|R\$)\s*[:\-]?\s*(?:R\$\s*)?(\d{1,2}(?:[.,]\d{3})+[.,]\d{2}|\d{1,5}[.,]\d{2})/i,
+    /(?:R\$\s*)(\d{1,2}(?:[.,]\d{3})+[.,]\d{2}|\d{1,5}[.,]\d{2})/,
+    /(\d{1,2}(?:[.,]\d{3})+[.,]\d{2}|\d{1,5}[.,]\d{2})\s*(?:reais|r\$)/i,
     // Sem centavos (inteiros)
-    /(?:por|apenas|custando|preço|R\$)\s*[:\-]?\s*(?:R\$\s*)?(\d{1,3}(?:[.,]\d{3})*)/i,
-    /(?:R\$\s*)(\d{1,3}(?:[.,]\d{3})+)/,
-    /(?:\b|\s)(\d{1,3}(?:[.,]\d{3})+)(?=\s*(?:reais|r\$|\b))/i,
+    /(?:por|apenas|custando|preço|R\$)\s*[:\-]?\s*(?:R\$\s*)?(\d{1,2}(?:[.,]\d{3})+|\d{1,5})(?!\d)/i,
+    /(?:R\$\s*)(\d{1,2}(?:[.,]\d{3})+|\d{1,5})(?!\d)/,
+    /(?:\b|\s)(\d{1,2}(?:[.,]\d{3})+)(?=\s*(?:reais|r\$|\b))/i,
   ];
 
   for (const pattern of patterns) {
@@ -383,14 +421,13 @@ function extractPrice(text: string): number | null {
 }
 
 function extractOriginalPrice(text: string): number | null {
-  // Procurar preço original (geralmente com   // Procurar padrões como "de R$ X por R$ Y" ou "era R$ X agora R$ Y"
   const patterns = [
     // Com centavos
-    /(?:de|era|era\s*de|por)\s*[:\-]?\s*(?:R\$\s*)?(\d{1,3}(?:[.,]\d{3})*[.,]\d{2})/i,
-    /(?:preço\s*original|antigo|de\s*antes)\s*[:\-]?\s*(?:R\$\s*)?(\d{1,3}(?:[.,]\d{3})*[.,]\d{2})/i,
+    /(?:de|era|era\s*de|por)\s*[:\-]?\s*(?:R\$\s*)?(\d{1,2}(?:[.,]\d{3})+[.,]\d{2}|\d{1,5}[.,]\d{2})/i,
+    /(?:preço\s*original|antigo|de\s*antes)\s*[:\-]?\s*(?:R\$\s*)?(\d{1,2}(?:[.,]\d{3})+[.,]\d{2}|\d{1,5}[.,]\d{2})/i,
     // Sem centavos (inteiros)
-    /(?:de|era|era\s*de|por)\s*[:\-]?\s*(?:R\$\s*)?(\d{1,3}(?:[.,]\d{3})*)/i,
-    /(?:preço\s*original|antigo|de\s*antes)\s*[:\-]?\s*(?:R\$\s*)?(\d{1,3}(?:[.,]\d{3})*)/i,
+    /(?:de|era|era\s*de|por)\s*[:\-]?\s*(?:R\$\s*)?(\d{1,2}(?:[.,]\d{3})+|\d{1,5})(?!\d)/i,
+    /(?:preço\s*original|antigo|de\s*antes)\s*[:\-]?\s*(?:R\$\s*)?(\d{1,2}(?:[.,]\d{3})+|\d{1,5})(?!\d)/i,
   ];
 
   for (const pattern of patterns) {
@@ -442,51 +479,12 @@ function extractStore(text: string, channel: string): string {
 }
 
 // ========== FORMATADORES DE MENSAGEM ==========
-
-// function formatBRL(value: number): string {
-//   if (!value) return "R$ 0,00";
-//   return "R$ " + value.toFixed(2).replace(".", ",").replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-// }
-
-function formatSmartMessage(
-  product: string,
-  price: number | null,
-  originalPrice: number | null,
-  discount: string | null,
-  store: string,
-  link: string,
-  filterName: string,
-): string {
-  const priceStr = price ? `R$ ${price.toFixed(2)}` : "Preço não informado";
-
-  let message = `🎯 *PROMOÇÃO ENCONTRADA*\n\n`;
-  message += `📦 *Produto:* ${product}\n`;
-
-  if (originalPrice && price && originalPrice > price) {
-    const savings = originalPrice - price;
-    const percent = ((savings / originalPrice) * 100).toFixed(0);
-    message += `💰 *Preço:* ${priceStr}\n`;
-    message += `📉 *De:* R$ ${originalPrice.toFixed(2)}\n`;
-    message += `💵 *Economia:* R$ ${savings.toFixed(2)} (${percent}%)\n`;
-  } else {
-    message += `💰 *Preço:* ${priceStr}\n`;
-  }
-
-  if (discount) {
-    message += `🏷️ *Desconto:* ${discount}\n`;
-  }
-
-  message += `🏪 *Loja:* ${store}\n`;
-  message += `📂 *Categoria:* ${filterName}\n\n`;
-  message += `🔗 *Link:* ${link}`;
-
-  return message;
-}
+// Formatação movida para discord.service.ts (rich embeds)
 
 export async function stopTelegramMonitor(): Promise<void> {
   if (client) {
     try {
-      await client.disconnect();
+      client.destroy();
     } catch (e) {}
     client = null;
   }

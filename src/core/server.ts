@@ -10,7 +10,7 @@ import telegramConfigRoutes from '../features/telegram-config/telegram-config.ro
 import channelRoutes from '../features/channel/channel.routes.js';
 import filterRoutes from '../features/filter/filter.routes.js';
 import monitorRoutes from '../features/monitor/monitor.routes.js';
-import whatsappRoutes from '../features/whatsapp/whatsapp.routes.js';
+import discordRoutes from '../features/discord/discord.routes.js';
 import statsRoutes from '../features/stats/stats.routes.js';
 import backupRoutes from '../features/backup/backup.routes.js';
 import testConnectionRoutes from '../features/test-connection/test-connection.routes.js';
@@ -54,7 +54,7 @@ app.use('/api/telegram-config', telegramConfigRoutes);
 app.use('/api/channels', channelRoutes);
 app.use('/api/filters', filterRoutes);
 app.use('/api/monitor', monitorRoutes);
-app.use('/api/whatsapp', whatsappRoutes);
+app.use('/api/discord', discordRoutes);
 app.use('/api/stats', statsRoutes);
 app.use('/api/backup', backupRoutes);
 app.use('/api/test', testConnectionRoutes);

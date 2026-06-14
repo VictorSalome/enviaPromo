@@ -39,3 +39,6 @@ session.session-journal
 # Test
 coverage/
 .nyc_output/
+
+# Server access
+SERVER-ACCESS.md
