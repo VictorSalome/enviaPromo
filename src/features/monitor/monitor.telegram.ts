@@ -89,7 +89,13 @@ export async function startTelegramMonitor(): Promise<void> {
 
     let messagesFound = 0;
     for (const channel of activeChannels) {
+      console.log(`[Monitor] Processando canal: ${channel.username}`);
       const count = await processChannel(channel.username, noFilterMode);
+      if (count > 0) {
+        console.log(`[Monitor] Canal ${channel.username}: ${count} mensagens enviadas`);
+      } else {
+        console.log(`[Monitor] Canal ${channel.username}: sem mensagens novas`);
+      }
       messagesFound += count;
     }
 
@@ -204,13 +210,14 @@ async function processChannel(
     }
 
     return sentCount;
-  } catch (err) {
+  } catch (err: any) {
     console.error(
-      "[Monitor] Erro ao processar canal",
-      channelUsername,
-      ":",
-      err,
+      `[Monitor] Erro ao processar canal ${channelUsername}: ${err?.message || err}`,
     );
+    // Se o cliente desconectou, marcar para reconexão no próximo ciclo
+    if (err?.message === "Not connected" || err?.code === "TIMEOUT") {
+      console.log("[Monitor] Cliente desconectado durante processamento");
+    }
     return 0;
   }
 }
@@ -365,8 +372,11 @@ async function extractImageUrl(
       if (buffer && buffer instanceof Buffer) {
         return { buffer: { data: buffer, ext: "png" } };
       }
-    } catch {
-      // Silencioso — imagem é opcional
+    } catch (err: any) {
+      // Imagem é opcional — loga só em debug
+      if (err?.message !== "Not connected") {
+        console.log(`[Monitor] Erro ao baixar imagem: ${err?.message || err}`);
+      }
     }
   }
 
