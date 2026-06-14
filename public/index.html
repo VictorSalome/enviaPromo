@@ -2060,6 +2060,8 @@
           const sendSection = document.getElementById("auth-send-section");
           const codeSection = document.getElementById("auth-code-section");
 
+          if (!statusCard || !statusText || !sendSection || !codeSection) return;
+
           if (data.data.isConnected) {
             statusCard.style.borderLeft = "4px solid var(--neon-green)";
             statusText.innerHTML =
@@ -2106,6 +2108,10 @@
       async function startTelegramAuth() {
         const btn = document.getElementById("btn-send-sms");
         const messageEl = document.getElementById("auth-send-message");
+        const codeSection = document.getElementById("auth-code-section");
+        const sendSection = document.getElementById("auth-send-section");
+
+        if (!btn || !messageEl || !codeSection || !sendSection) return;
 
         btn.disabled = true;
         btn.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Enviando...';
@@ -2115,8 +2121,8 @@
             method: "POST",
           });
           showToast(data.message || "Código enviado!", "info");
-          document.getElementById("auth-code-section").style.display = "block";
-          document.getElementById("auth-send-section").style.display = "none";
+          codeSection.style.display = "block";
+          sendSection.style.display = "none";
           messageEl.style.display = "block";
           document.getElementById("tg-auth-code").focus();
         } catch (err) {
@@ -2133,6 +2139,11 @@
 
       async function verifyTelegramCode() {
         const code = document.getElementById("tg-auth-code").value.trim();
+        const codeSection = document.getElementById("auth-code-section");
+        const sendSection = document.getElementById("auth-send-section");
+        const codeInput = document.getElementById("tg-auth-code");
+
+        if (!codeSection || !sendSection || !codeInput) return;
 
         if (!code || code.length < 5) {
           showToast("Digite o código completo (5 dígitos)", "warning");
@@ -2146,9 +2157,9 @@
             body: JSON.stringify({ code }),
           });
           showToast(data.message || "Autenticação completa!", "success");
-          document.getElementById("auth-code-section").style.display = "none";
-          document.getElementById("auth-send-section").style.display = "block";
-          document.getElementById("tg-auth-code").value = "";
+          codeSection.style.display = "none";
+          sendSection.style.display = "block";
+          codeInput.value = "";
           checkTelegramAuthStatus();
           loadTelegramConfig();
         } catch (err) {
@@ -2414,6 +2425,8 @@
         const status = document.getElementById("monitor-status");
         const statValue = document.getElementById("stat-status");
 
+        if (!btn || !status || !statValue) return;
+
         if (running) {
           status.className = "badge badge-success";
           status.innerHTML = '<i class="ph ph-play"></i> Rodando';
@@ -2585,6 +2598,7 @@
       function showToast(message, type, duration) {
         duration = duration || 3000;
         const container = document.getElementById("toastContainer");
+        if (!container) return;
         const toast = document.createElement("div");
         toast.className = "toast toast-" + type;
         const icons = {
