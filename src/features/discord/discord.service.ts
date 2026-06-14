@@ -202,3 +202,16 @@ export const sendTestMessage = async (): Promise<boolean> => {
 
   return sendWebhook({ embeds: [embed], username: "Promo Monitor 🚀" });
 };
+
+export const sendMonitorStarted = async (): Promise<boolean> => {
+  const embed = {
+    title: "🚀 Monitor Iniciado",
+    description:
+      "O monitoramento do Telegram foi iniciado com sucesso!\n\n📡 Verificando canais ativos...\n🔍 Modo de captura automática ativado\n💬 Promoções serão enviadas para este canal",
+    color: 0x5865F2,
+    timestamp: new Date().toISOString(),
+    footer: { text: "Promo Monitor 🚀" },
+  };
+
+  return sendWebhook({ embeds: [embed], username: "Promo Monitor 🚀" });
+};

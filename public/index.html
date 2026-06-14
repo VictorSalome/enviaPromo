@@ -2068,27 +2068,43 @@
           const statusText = document.getElementById("auth-status-text");
           const sendSection = document.getElementById("auth-send-section");
           const codeSection = document.getElementById("auth-code-section");
+          const statusBadge = document.getElementById("tg-status");
 
           if (!statusCard || !statusText || !sendSection || !codeSection) return;
 
           if (data.data.isConnected) {
             statusCard.style.borderLeft = "4px solid var(--neon-green)";
             statusText.innerHTML =
-              '<span style="color: var(--neon-green);">✅ Autenticado e pronto para usar!</span>';
+              '<span style="color: var(--neon-green); font-size: 15px;"><i class="ph ph-check-circle" style="font-size: 18px;"></i> Autenticado e pronto para usar!</span><br><span style="font-size: 12px; color: var(--text-muted);">O monitor pode iniciar quando quiser</span>';
             sendSection.style.display = "none";
             codeSection.style.display = "none";
+            if (statusBadge) {
+              statusBadge.className = "badge badge-success";
+              statusBadge.innerHTML =
+                '<i class="ph ph-check-circle"></i> Autenticado';
+            }
           } else if (data.data.isConfigured) {
             statusCard.style.borderLeft = "4px solid var(--neon-yellow)";
             statusText.innerHTML =
-              '<span style="color: var(--neon-yellow);">⚠️ Configurado mas NÃO autenticado</span><br><span style="font-size: 12px;">Clique em "Enviar Código SMS" para autenticar</span>';
+              '<span style="color: var(--neon-yellow); font-size: 15px;"><i class="ph ph-warning" style="font-size: 18px;"></i> Configurado mas NÃO autenticado</span><br><span style="font-size: 12px; color: var(--text-muted);">Clique em "Enviar Código SMS" abaixo para autenticar</span>';
             sendSection.style.display = "block";
             codeSection.style.display = "none";
+            if (statusBadge) {
+              statusBadge.className = "badge badge-warning";
+              statusBadge.innerHTML =
+                '<i class="ph ph-warning"></i> Aguardando código';
+            }
           } else {
             statusCard.style.borderLeft = "4px solid var(--neon-red)";
             statusText.innerHTML =
-              '<span style="color: var(--neon-red);">❌ Não configurado</span><br><span style="font-size: 12px;">Preencha API_ID, API_HASH e telefone acima</span>';
+              '<span style="color: var(--neon-red); font-size: 15px;"><i class="ph ph-x-circle" style="font-size: 18px;"></i> Não configurado</span><br><span style="font-size: 12px; color: var(--text-muted);">Preencha API_ID, API_HASH e telefone acima e salve</span>';
             sendSection.style.display = "none";
             codeSection.style.display = "none";
+            if (statusBadge) {
+              statusBadge.className = "badge badge-error";
+              statusBadge.innerHTML =
+                '<i class="ph ph-plug"></i> Desconectado';
+            }
           }
         } catch (err) {
           showToast(err.message || "Erro ao verificar status de auth", "error");
@@ -2970,6 +2986,25 @@
       // ============== INITIALIZATION ==============
       document.addEventListener("DOMContentLoaded", () => {
         checkAuth();
+
+        // Verificar status do Telegram e alertar se não configurado
+        (async () => {
+          try {
+            const res = await apiFetch("/api/telegram-config/auth-status");
+            if (!res.data.isConnected) {
+              setTimeout(() => {
+                showToast(
+                  res.data.isConfigured
+                    ? '⚠️ Telegram configurado mas não autenticado — vá na aba "Telegram" e envie o código SMS'
+                    : '⚠️ Telegram não configurado — vá na aba "Telegram" e preencha as credenciais',
+                  "warning",
+                  6000,
+                );
+              }, 1500);
+            }
+          } catch (e) {}
+        })();
+
         loadChannels();
         renderFilters();
         loadFilterStats();
