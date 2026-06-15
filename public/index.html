@@ -1751,10 +1751,10 @@
                       id="monitor-test-tg-btn"
                       onclick="testTelegramConnection()"
                       class="btn btn-outline btn-lg"
-                      title="Enviar mensagem de teste no grupo Telegram"
+                      title="Testar fluxo completo: Telegram Bot + Discord embed"
                     >
                       <i class="ph ph-paper-plane-right"></i>
-                      Testar Conexão
+                      Testar Fluxo Completo
                     </button>
                     <button
                       id="monitor-toggle-btn"
@@ -2564,15 +2564,21 @@
         const btn = document.getElementById("monitor-test-tg-btn");
         if (!btn) return;
         btn.disabled = true;
-        btn.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Enviando...';
+        btn.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Testando fluxo...';
         try {
-          const data = await apiFetch("/api/monitor/test-connection", { method: "POST" });
-          showToast(data.message || "Mensagem enviada ao grupo de teste!", "success");
+          const data = await apiFetch("/api/monitor/test-flow", { method: "POST" });
+          const tg = data.data?.telegram || "—";
+          const dc = data.data?.discord || "—";
+          showToast(
+            `🤖 TG: ${tg}\n💬 DC: ${dc}`,
+            data.success ? "success" : "error",
+            6000,
+          );
         } catch (err) {
-          showToast(err.message || "Erro ao testar conexão Telegram. Verifique o .env", "error");
+          showToast(err.message || "Erro ao testar fluxo completo", "error");
         } finally {
           btn.disabled = false;
-          btn.innerHTML = '<i class="ph ph-paper-plane-right"></i> Testar Conexão';
+          btn.innerHTML = '<i class="ph ph-paper-plane-right"></i> Testar Fluxo Completo';
         }
       }
 
