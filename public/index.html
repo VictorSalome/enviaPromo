@@ -1295,9 +1295,15 @@
         </nav>
 
         <div class="sidebar-footer">
-          <div class="sidebar-tip">
-            <i class="ph ph-lightbulb"></i> Configure o Telegram primeiro para
-            iniciar o monitoramento
+          <div class="sidebar-tip" id="sidebarConnection">
+            <span style="display: flex; align-items: center; gap: 6px;">
+              <span id="sidebarTgDot" style="width: 8px; height: 8px; border-radius: 50%; background: var(--neon-red); display: inline-block; flex-shrink: 0;"></span>
+              <span id="sidebarTgText" style="font-size: 12px; color: var(--text-muted);">TG: Aguardando...</span>
+            </span>
+            <span style="display: flex; align-items: center; gap: 6px; margin-top: 4px;">
+              <span id="sidebarMonDot" style="width: 8px; height: 8px; border-radius: 50%; background: var(--neon-red); display: inline-block; flex-shrink: 0;"></span>
+              <span id="sidebarMonText" style="font-size: 12px; color: var(--text-muted);">Monitor: Parado</span>
+            </span>
           </div>
         </div>
       </aside>
@@ -1728,15 +1734,33 @@
                     <span id="monitor-status" class="badge badge-error">
                       <i class="ph ph-pause"></i> Parado
                     </span>
+                    <span
+                      id="monitor-tg-status"
+                      class="badge badge-error"
+                      style="margin-left: 8px"
+                    >
+                      <i class="ph ph-plug"></i> TG: Desconectado
+                    </span>
                   </div>
-                  <button
-                    id="monitor-toggle-btn"
-                    onclick="toggleMonitor()"
-                    class="btn btn-success btn-lg"
-                  >
-                    <i class="ph ph-play"></i>
-                    Iniciar Monitor
-                  </button>
+                  <div class="flex gap-2">
+                    <button
+                      id="monitor-test-tg-btn"
+                      onclick="testTelegramConnection()"
+                      class="btn btn-outline btn-lg"
+                      title="Enviar mensagem de teste no grupo Telegram"
+                    >
+                      <i class="ph ph-paper-plane-right"></i>
+                      Testar Conexão
+                    </button>
+                    <button
+                      id="monitor-toggle-btn"
+                      onclick="toggleMonitor()"
+                      class="btn btn-success btn-lg"
+                    >
+                      <i class="ph ph-play"></i>
+                      Iniciar Monitor
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -2449,6 +2473,8 @@
         const btn = document.getElementById("monitor-toggle-btn");
         const status = document.getElementById("monitor-status");
         const statValue = document.getElementById("stat-status");
+        const sidebarMonDot = document.getElementById("sidebarMonDot");
+        const sidebarMonText = document.getElementById("sidebarMonText");
 
         if (!btn || !status || !statValue) return;
 
@@ -2459,6 +2485,8 @@
           btn.innerHTML = '<i class="ph ph-pause"></i> Parar Monitor';
           statValue.textContent = "Rodando";
           statValue.className = "stat-value status-online";
+          if (sidebarMonDot) sidebarMonDot.style.background = "var(--neon-green)";
+          if (sidebarMonText) sidebarMonText.textContent = "Monitor: Rodando";
         } else {
           status.className = "badge badge-error";
           status.innerHTML = '<i class="ph ph-pause"></i> Parado';
@@ -2466,6 +2494,33 @@
           btn.innerHTML = '<i class="ph ph-play"></i> Iniciar Monitor';
           statValue.textContent = "Online";
           statValue.className = "stat-value status-online";
+          if (sidebarMonDot) sidebarMonDot.style.background = "var(--neon-red)";
+          if (sidebarMonText) sidebarMonText.textContent = "Monitor: Parado";
+        }
+      }
+
+      function updateConnectionUI(connected, configured) {
+        const badge = document.getElementById("monitor-tg-status");
+        const sidebarTgDot = document.getElementById("sidebarTgDot");
+        const sidebarTgText = document.getElementById("sidebarTgText");
+
+        if (!badge) return;
+
+        if (connected) {
+          badge.className = "badge badge-success";
+          badge.innerHTML = '<i class="ph ph-check-circle"></i> TG: Conectado';
+          if (sidebarTgDot) sidebarTgDot.style.background = "var(--neon-green)";
+          if (sidebarTgText) sidebarTgText.textContent = "TG: Conectado";
+        } else if (configured) {
+          badge.className = "badge badge-warning";
+          badge.innerHTML = '<i class="ph ph-warning"></i> TG: Não autenticado';
+          if (sidebarTgDot) sidebarTgDot.style.background = "var(--neon-yellow)";
+          if (sidebarTgText) sidebarTgText.textContent = "TG: Não autenticado";
+        } else {
+          badge.className = "badge badge-error";
+          badge.innerHTML = '<i class="ph ph-plug"></i> TG: Não configurado';
+          if (sidebarTgDot) sidebarTgDot.style.background = "var(--neon-red)";
+          if (sidebarTgText) sidebarTgText.textContent = "TG: Não configurado";
         }
       }
 
@@ -2475,6 +2530,35 @@
           updateMonitorUI(data.data.running);
         } catch (err) {
           // Silencioso no polling para não encher a tela de toasts
+        }
+      }
+
+      async function pollConnectionStatus() {
+        try {
+          const data = await apiFetch("/api/monitor/connection-status");
+          const tgConnected = data.data && data.data.telegramConnected;
+          // Também checar auth-status para saber se configurado
+          const authData = await apiFetch("/api/telegram-config/auth-status").catch(() => null);
+          const configured = authData && authData.data && (authData.data.isConfigured || authData.data.hasSession);
+          updateConnectionUI(tgConnected, configured);
+        } catch (err) {
+          // Silencioso
+        }
+      }
+
+      async function testTelegramConnection() {
+        const btn = document.getElementById("monitor-test-tg-btn");
+        if (!btn) return;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Enviando...';
+        try {
+          const data = await apiFetch("/api/monitor/test-connection", { method: "POST" });
+          showToast(data.message || "Mensagem enviada ao grupo de teste!", "success");
+        } catch (err) {
+          showToast(err.message || "Erro ao testar conexão Telegram. Verifique o .env", "error");
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="ph ph-paper-plane-right"></i> Testar Conexão';
         }
       }
 
@@ -3011,8 +3095,10 @@
         loadPriceAlerts();
         loadStats();
         pollMonitorStatus();
+        pollConnectionStatus();
         checkTelegramAuthStatus();
         monitorPollInterval = setInterval(pollMonitorStatus, 5000);
+        setInterval(pollConnectionStatus, 10000);
       });
     </script>
     <div class="toast-container" id="toastContainer"></div>

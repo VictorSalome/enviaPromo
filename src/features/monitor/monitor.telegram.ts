@@ -12,7 +12,7 @@ import {
 } from "../filter/filter.repository.js";
 import { isDuplicate, addSentMessage } from "../dedup/dedup.repository.js";
 import { sendDiscordPromo } from "../discord/discord.service.js";
-import { getMonitorStatus, setRunningState } from "./monitor.state.js";
+import { getMonitorStatus, setRunningState, setTelegramConnected } from "./monitor.state.js";
 
 let client: TelegramClient | null = null;
 let isProcessing = false;
@@ -76,6 +76,7 @@ export async function startTelegramMonitor(): Promise<void> {
 
     if (!client || !client.connected) {
       console.log("[Monitor] Cliente desconectado. Recriando conexão...");
+      setTelegramConnected(false);
       if (client) {
         try { await client.destroy(); } catch (e) {}
         client = null;
@@ -147,6 +148,7 @@ async function createClient(tgConfig: any): Promise<void> {
 
   const sessionString = session.save();
   await updateSession(sessionString, true);
+  setTelegramConnected(true);
 }
 
 async function reconnectClient(): Promise<void> {
@@ -156,10 +158,12 @@ async function reconnectClient(): Promise<void> {
     } catch (e) {}
     client = null;
   }
+  setTelegramConnected(false);
 
   const tgConfig = await getConfig();
   if (tgConfig) {
     await createClient(tgConfig);
+    setTelegramConnected(true);
   }
 }
 
@@ -498,6 +502,7 @@ export async function stopTelegramMonitor(): Promise<void> {
     } catch (e) {}
     client = null;
   }
+  setTelegramConnected(false);
   lastMessageIds.clear();
   setRunningState(false);
   console.log("[Monitor] Monitor parado");
