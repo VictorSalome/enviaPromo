@@ -189,12 +189,21 @@ async function processChannel(
 
     const entity = await client.getEntity(channelUsername);
 
-    // Buscar apenas mensagens novas (mais eficiente)
     const lastId = lastMessageIds.get(channelUsername) || 0;
-    const isFirstRun = lastId === 0;
+
+    // Primeira execução: só rastrear o último ID, sem enviar nada
+    if (lastId === 0) {
+      const [latest] = await client.getMessages(entity, { limit: 1 });
+      if (latest?.id) {
+        lastMessageIds.set(channelUsername, latest.id);
+        console.log(`[Monitor] Canal ${channelUsername}: rastreado último ID ${latest.id}`);
+      }
+      return 0;
+    }
+
     const messages = await client.getMessages(entity, {
-      limit: noFilterMode ? (isFirstRun ? 50 : 30) : (isFirstRun ? 30 : 20),
-      minId: lastId > 0 ? lastId : undefined,
+      limit: noFilterMode ? 30 : 20,
+      minId: lastId,
     });
 
     if (messages.length === 0) return 0;
