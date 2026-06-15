@@ -1,5 +1,6 @@
 import { TelegramClient } from "telegram";
 import { StringSession } from "telegram/sessions/StringSession.js";
+import { NewMessage } from "telegram/events/index.js";
 
 import {
   getConfig,
@@ -146,10 +147,12 @@ async function createClient(tgConfig: any): Promise<void> {
       connectionRetries: RETRY_CONFIG.maxRetries,
       useWSS: false,
       timeout: 30000,
-      autoReconnect: false,
+      autoReconnect: true,
     },
   );
   await client.connect();
+
+  setupRealtimeHandler();
 
   const sessionString = session.save();
   await updateSession(sessionString, true);
@@ -170,6 +173,60 @@ async function reconnectClient(): Promise<void> {
     await createClient(tgConfig);
     setTelegramConnected(true);
   }
+}
+
+function setupRealtimeHandler(): void {
+  if (!client || !getMonitorStatus().running) return;
+
+  client.addEventHandler(async (event: any) => {
+    try {
+      if (!getMonitorStatus().running) return;
+
+      const message = event.message;
+      if (!message) return;
+
+      let text = message.text || message.caption || "";
+      if (!text.trim()) return;
+
+      let channelUsername = "";
+
+      // Tentar obter username do chat
+      if (message.chat?.username) {
+        channelUsername = `@${message.chat.username.toLowerCase()}`;
+      } else {
+        try {
+          const chat = await message.getChat();
+          if (chat?.username) {
+            channelUsername = `@${chat.username.toLowerCase()}`;
+          }
+        } catch {}
+      }
+
+      if (!channelUsername) return;
+
+      // Verificar se é um canal monitorado
+      const activeChannels = await findAll();
+      const isActive = activeChannels.some((ch: any) => {
+        const username = ch.username?.toLowerCase();
+        const isActiveFlag = ch.is_active || ch.isActive;
+        return username === channelUsername && (isActiveFlag === 1 || isActiveFlag === true);
+      });
+
+      if (!isActive) return;
+
+      console.log(`[Monitor][Tempo Real] Nova mensagem em ${channelUsername}`);
+
+      const activeFiltersCount = await getActiveFiltersCount();
+      const noFilterMode = activeFiltersCount === 0;
+      const filters = noFilterMode ? [] : await findAllFilters();
+
+      await processMessage(message, channelUsername, filters, noFilterMode);
+    } catch (err: any) {
+      console.error(`[Monitor][Tempo Real] Erro: ${err?.message || err}`);
+    }
+  }, new NewMessage({}));
+
+  console.log("[Monitor] Handler de tempo real registrado");
 }
 
 function scheduleNextCheck(): void {
