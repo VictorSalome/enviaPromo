@@ -191,22 +191,32 @@ async function processChannel(
 
     const lastId = lastMessageIds.get(channelUsername) || 0;
 
-    // Primeira execução: só rastrear o último ID, sem enviar nada
-    if (lastId === 0) {
-      const [latest] = await client.getMessages(entity, { limit: 1 });
-      if (latest?.id) {
-        lastMessageIds.set(channelUsername, latest.id);
-        console.log(`[Monitor] Canal ${channelUsername}: rastreado último ID ${latest.id}`);
-      }
+    // Buscar as últimas mensagens do canal
+    const messages = await client.getMessages(entity, {
+      limit: noFilterMode ? 30 : 20,
+    });
+
+    if (messages.length === 0) {
+      console.log(`[Monitor] Canal ${channelUsername}: getMessages retornou 0 mensagens`);
       return 0;
     }
 
-    const messages = await client.getMessages(entity, {
-      limit: noFilterMode ? 30 : 20,
-      minId: lastId,
-    });
+    // Filtrar apenas mensagens novas (ID > último rastreado)
+    const messageIds = messages.map(m => m.id);
+    const newMessages = lastId === 0 ? [] : messages.filter(m => (m.id || 0) > lastId);
+    console.log(`[Monitor] Canal ${channelUsername}: ${messages.length} msgs obtidas (IDs: ${Math.min(...messageIds)}-${Math.max(...messageIds)}), lastId=${lastId}, novas=${newMessages.length}`);
+    if (newMessages.length === 0 && lastId === 0) {
+      // Primeira execução: só rastrear o último ID sem enviar nada
+      const maxId = Math.max(...messages.map(m => m.id || 0));
+      lastMessageIds.set(channelUsername, maxId);
+      console.log(`[Monitor] Canal ${channelUsername}: rastreado último ID ${maxId}`);
+      return 0;
+    }
 
-    if (messages.length === 0) return 0;
+    if (newMessages.length === 0) {
+      console.log(`[Monitor] Canal ${channelUsername}: sem mensagens novas (último ID: ${lastId})`);
+      return 0;
+    }
 
     // Atualizar último ID
     const newLastId = Math.max(...messages.map((m) => m.id || 0));
@@ -217,7 +227,7 @@ async function processChannel(
     let sentCount = 0;
     const filters = noFilterMode ? [] : await findAllFilters();
 
-    for (const message of messages.reverse()) {
+    for (const message of newMessages.reverse()) {
       // Processar do mais antigo para o mais novo
       const result = await processMessage(
         message,
