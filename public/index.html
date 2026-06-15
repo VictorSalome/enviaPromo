@@ -2508,7 +2508,7 @@
         }
       }
 
-      function updateConnectionUI(connected, configured) {
+      function updateConnectionUI(connected, configured, hasSession) {
         const badge = document.getElementById("monitor-tg-status");
         const sidebarTgDot = document.getElementById("sidebarTgDot");
         const sidebarTgText = document.getElementById("sidebarTgText");
@@ -2520,6 +2520,11 @@
           badge.innerHTML = '<i class="ph ph-check-circle"></i> TG: Conectado';
           if (sidebarTgDot) sidebarTgDot.style.background = "var(--neon-green)";
           if (sidebarTgText) sidebarTgText.textContent = "TG: Conectado";
+        } else if (hasSession) {
+          badge.className = "badge badge-success";
+          badge.innerHTML = '<i class="ph ph-check-circle"></i> TG: Autenticado (ocioso)';
+          if (sidebarTgDot) sidebarTgDot.style.background = "var(--neon-green)";
+          if (sidebarTgText) sidebarTgText.textContent = "TG: Autenticado";
         } else if (configured) {
           badge.className = "badge badge-warning";
           badge.innerHTML = '<i class="ph ph-warning"></i> TG: Não autenticado';
@@ -2546,10 +2551,10 @@
         try {
           const data = await apiFetch("/api/monitor/connection-status");
           const tgConnected = data.data && data.data.telegramConnected;
-          // Também checar auth-status para saber se configurado
           const authData = await apiFetch("/api/telegram-config/auth-status").catch(() => null);
           const configured = authData && authData.data && (authData.data.isConfigured || authData.data.hasSession);
-          updateConnectionUI(tgConnected, configured);
+          const hasSession = authData && authData.data && authData.data.hasSession;
+          updateConnectionUI(tgConnected, configured, hasSession);
         } catch (err) {
           // Silencioso
         }
