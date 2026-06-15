@@ -1540,8 +1540,8 @@
 
                 <div class="flex justify-between mt-6">
                   <button onclick="testConnection()" class="btn btn-outline">
-                    <i class="ph ph-plug"></i>
-                    Testar Conexão
+                    <i class="ph ph-paper-plane-right"></i>
+                    Testar Bot Telegram
                   </button>
                   <button
                     onclick="saveTelegramConfig()"
@@ -1551,6 +1551,10 @@
                     Salvar Config
                   </button>
                 </div>
+                <p style="font-size: 11px; color: var(--text-muted); margin-top: 10px; text-align: center;">
+                  <i class="ph ph-info"></i> "Testar Bot Telegram" envia uma mensagem no grupo
+                  <strong>Promo-Teste</strong> via Bot API para confirmar que o bot está funcionando.
+                </p>
               </div>
             </div>
           </div>
@@ -2217,13 +2221,18 @@
       }
 
       async function testConnection() {
+        // Usar o bot Telegram para enviar mensagem de teste no grupo Promo-Teste
         try {
-          const data = await apiFetch("/api/test/telegram", {
+          const data = await apiFetch("/api/monitor/test-connection", {
             method: "POST",
           });
-          showToast(data.message || "Conexão OK!", "success");
+          showToast(data.message || "Mensagem enviada ao grupo de teste!", "success");
         } catch (err) {
-          showToast(err.message || "Erro ao testar conexão", "error");
+          showToast(
+            err.message ||
+              "Erro ao testar. Verifique TELEGRAM_BOT_TOKEN no .env e se o bot está no grupo.",
+            "error",
+          );
         }
       }
 
