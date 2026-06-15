@@ -28,9 +28,9 @@ const RETRY_CONFIG = {
 };
 
 // Delay adaptativo baseado na atividade
-let currentCheckInterval = 300000; // Começa com 5 minutos // Começa com 1 minuto
-const MIN_INTERVAL = 300000; // 5 minutos mínimo  // 30 segundos mínimo
-const MAX_INTERVAL = 600000; // 10 minutos máximo // 2 minutos máximo
+let currentCheckInterval = 120000; // Começa com 2 minutos
+const MIN_INTERVAL = 60000; // 1 minuto mínimo
+const MAX_INTERVAL = 300000; // 5 minutos máximo
 
 export async function startTelegramMonitor(): Promise<void> {
   if (isProcessing) {
@@ -38,6 +38,11 @@ export async function startTelegramMonitor(): Promise<void> {
     return;
   }
 
+  // Resetar lastMessageIds se o monitor acabou de ser iniciado (para pegar mensagens novas em próximo ciclo)
+  if (!getMonitorStatus().running) {
+    // Primeira execução após start não reseta IDs para evitar reenvio em massa
+  }
+  
   try {
     isProcessing = true;
 
@@ -186,8 +191,9 @@ async function processChannel(
 
     // Buscar apenas mensagens novas (mais eficiente)
     const lastId = lastMessageIds.get(channelUsername) || 0;
+    const isFirstRun = lastId === 0;
     const messages = await client.getMessages(entity, {
-      limit: noFilterMode ? 5 : 10,
+      limit: noFilterMode ? (isFirstRun ? 50 : 30) : (isFirstRun ? 30 : 20),
       minId: lastId > 0 ? lastId : undefined,
     });
 
@@ -220,7 +226,12 @@ async function processChannel(
     );
     // Se o cliente desconectou, marcar para reconexão no próximo ciclo
     if (err?.message === "Not connected" || err?.code === "TIMEOUT") {
-      console.log("[Monitor] Cliente desconectado durante processamento");
+      console.log("[Monitor] Cliente desconectado durante processamento. Reconectando...");
+      setTelegramConnected(false);
+      if (client) {
+        try { await client.destroy(); } catch (e) {}
+        client = null;
+      }
     }
     return 0;
   }
