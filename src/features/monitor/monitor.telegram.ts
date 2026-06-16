@@ -497,24 +497,35 @@ function extractProductName(text: string): string {
 }
 
 function extractPrice(text: string): number | null {
-  const patterns = [
-    // Com centavos — numbers WITH thousands separators (max 2 dígitos antes do separador)
-    // ou numbers WITHOUT separators (até 5 dígitos)
-    /(?:por|apenas|custando|preço|R\$)\s*[:\-]?\s*(?:R\$\s*)?(\d{1,2}(?:[.,]\d{3})+[.,]\d{2}|\d{1,5}[.,]\d{2})/i,
-    /(?:R\$\s*)(\d{1,2}(?:[.,]\d{3})+[.,]\d{2}|\d{1,5}[.,]\d{2})/,
+  const toNumber = (s: string): number | null => {
+    const num = parseFloat(s.replace(/\./g, "").replace(",", "."));
+    return num > 0 && num < 100000 ? num : null;
+  };
+
+  // 1. Priorizar "por", "apenas", "custando" (preço de venda)
+  const saleMatch = text.match(
+    /(?:por|apenas|custando)\s*[:\-]?\s*(?:R\$\s*)?(\d{1,2}(?:[.,]\d{3})+(?:[.,]\d{2})?|\d{1,5}(?:[.,]\d{2})?)(?!\d)/i,
+  );
+  if (saleMatch) {
+    const price = toNumber(saleMatch[1]);
+    if (price !== null) return price;
+  }
+
+  // 2. Fallback: "R$" genérico ou "Preço"
+  const genericPatterns = [
+    // Com R$ — com ou sem centavos
+    /(?:R\$\s*|[Pp]reço\s*[:\-]?\s*)(\d{1,2}(?:[.,]\d{3})+(?:[.,]\d{2})?|\d{1,5}(?:[.,]\d{2})?)(?!\d)/,
+    // Número solto + "reais"/"r$"
     /(\d{1,2}(?:[.,]\d{3})+[.,]\d{2}|\d{1,5}[.,]\d{2})\s*(?:reais|r\$)/i,
-    // Sem centavos (inteiros)
-    /(?:por|apenas|custando|preço|R\$)\s*[:\-]?\s*(?:R\$\s*)?(\d{1,2}(?:[.,]\d{3})+|\d{1,5})(?!\d)/i,
-    /(?:R\$\s*)(\d{1,2}(?:[.,]\d{3})+|\d{1,5})(?!\d)/,
-    /(?:\b|\s)(\d{1,2}(?:[.,]\d{3})+)(?=\s*(?:reais|r\$|\b))/i,
+    // Milhar solto + "reais"/"r$"
+    /(?:\b|\s)(\d{1,2}(?:[.,]\d{3})+)(?=\s*(?:reais|r\$))/i,
   ];
 
-  for (const pattern of patterns) {
+  for (const pattern of genericPatterns) {
     const match = text.match(pattern);
     if (match) {
-      const priceStr = match[1].replace(/\./g, "").replace(",", ".");
-      const price = parseFloat(priceStr);
-      if (price > 0 && price < 100000) return price;
+      const price = toNumber(match[1]);
+      if (price !== null) return price;
     }
   }
 
@@ -522,21 +533,25 @@ function extractPrice(text: string): number | null {
 }
 
 function extractOriginalPrice(text: string): number | null {
+  const toNumber = (s: string): number | null => {
+    const num = parseFloat(s.replace(/\./g, "").replace(",", "."));
+    return num > 0 && num < 100000 ? num : null;
+  };
+
   const patterns = [
-    // Com centavos
-    /(?:de|era|era\s*de|por)\s*[:\-]?\s*(?:R\$\s*)?(\d{1,2}(?:[.,]\d{3})+[.,]\d{2}|\d{1,5}[.,]\d{2})/i,
-    /(?:preço\s*original|antigo|de\s*antes)\s*[:\-]?\s*(?:R\$\s*)?(\d{1,2}(?:[.,]\d{3})+[.,]\d{2}|\d{1,5}[.,]\d{2})/i,
-    // Sem centavos (inteiros)
-    /(?:de|era|era\s*de|por)\s*[:\-]?\s*(?:R\$\s*)?(\d{1,2}(?:[.,]\d{3})+|\d{1,5})(?!\d)/i,
-    /(?:preço\s*original|antigo|de\s*antes)\s*[:\-]?\s*(?:R\$\s*)?(\d{1,2}(?:[.,]\d{3})+|\d{1,5})(?!\d)/i,
+    // 1. "De R$" (início de linha ou após emoji) — preço original
+    /(?:^|[\n\r])[^\n]*?[Dd]e\s*[:\-]?\s*R\$\s*(\d{1,2}(?:[.,]\d{3})+(?:[.,]\d{2})?|\d{1,5}(?:[.,]\d{2})?)(?!\d)/,
+    // 2. "preço original", "antigo", "de antes"
+    /(?:preço\s*original|antigo|de\s*antes)\s*[:\-]?\s*(?:R\$\s*)?(\d{1,2}(?:[.,]\d{3})+(?:[.,]\d{2})?|\d{1,5}(?:[.,]\d{2})?)(?!\d)/i,
+    // 3. "era", "era de"
+    /(?:era|era\s*de)\s*[:\-]?\s*(?:R\$\s*)?(\d{1,2}(?:[.,]\d{3})+(?:[.,]\d{2})?|\d{1,5}(?:[.,]\d{2})?)(?!\d)/i,
   ];
 
   for (const pattern of patterns) {
     const match = text.match(pattern);
     if (match) {
-      const priceStr = match[1].replace(/\./g, "").replace(",", ".");
-      const price = parseFloat(priceStr);
-      if (price > 0 && price < 100000) return price;
+      const price = toNumber(match[1]);
+      if (price !== null) return price;
     }
   }
 
