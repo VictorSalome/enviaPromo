@@ -296,6 +296,8 @@
         display: flex;
         flex-direction: column;
         position: fixed;
+        top: 0;
+        left: 0;
         height: 100vh;
         z-index: 100;
         transition: transform 0.3s ease;
@@ -619,7 +621,9 @@
       .stat-card:hover {
         transform: translateY(-4px);
         border-color: var(--accent-color);
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 20px color-mix(in srgb, var(--accent-color) 15%, transparent);
+        box-shadow:
+          0 8px 32px rgba(0, 0, 0, 0.3),
+          0 0 20px color-mix(in srgb, var(--accent-color) 15%, transparent);
       }
 
       .stat-card.cyan {
@@ -1215,7 +1219,10 @@
             href="#"
             class="nav-item active"
             data-section="dashboard"
-            onclick="navigate('dashboard')"
+            onclick="
+              navigate('dashboard');
+              return false;
+            "
           >
             <i class="ph ph-squares-four nav-icon"></i>
             <span class="nav-label">Dashboard</span>
@@ -1224,7 +1231,10 @@
             href="#"
             class="nav-item"
             data-section="telegram"
-            onclick="navigate('telegram')"
+            onclick="
+              navigate('telegram');
+              return false;
+            "
           >
             <i class="ph ph-gear nav-icon"></i>
             <span class="nav-label">Telegram</span>
@@ -1233,7 +1243,10 @@
             href="#"
             class="nav-item"
             data-section="discord"
-            onclick="navigate('discord')"
+            onclick="
+              navigate('discord');
+              return false;
+            "
           >
             <i class="ph ph-discord-logo nav-icon"></i>
             <span class="nav-label">Discord</span>
@@ -1242,7 +1255,10 @@
             href="#"
             class="nav-item"
             data-section="channels"
-            onclick="navigate('channels')"
+            onclick="
+              navigate('channels');
+              return false;
+            "
           >
             <i class="ph ph-television nav-icon"></i>
             <span class="nav-label">Canais</span>
@@ -1251,7 +1267,10 @@
             href="#"
             class="nav-item"
             data-section="filters"
-            onclick="navigate('filters')"
+            onclick="
+              navigate('filters');
+              return false;
+            "
           >
             <i class="ph ph-funnel nav-icon"></i>
             <span class="nav-label">Filtros</span>
@@ -1260,7 +1279,10 @@
             href="#"
             class="nav-item"
             data-section="monitor"
-            onclick="navigate('monitor')"
+            onclick="
+              navigate('monitor');
+              return false;
+            "
           >
             <i class="ph ph-activity nav-icon"></i>
             <span class="nav-label">Monitor</span>
@@ -1269,7 +1291,10 @@
             href="#"
             class="nav-item"
             data-section="price-alerts"
-            onclick="navigate('price-alerts')"
+            onclick="
+              navigate('price-alerts');
+              return false;
+            "
           >
             <i class="ph ph-currency-dollar nav-icon"></i>
             <span class="nav-label">Preços</span>
@@ -1278,7 +1303,10 @@
             href="#"
             class="nav-item"
             data-section="stats"
-            onclick="navigate('stats')"
+            onclick="
+              navigate('stats');
+              return false;
+            "
           >
             <i class="ph ph-chart-line-up nav-icon"></i>
             <span class="nav-label">Estatísticas</span>
@@ -1287,7 +1315,10 @@
             href="#"
             class="nav-item"
             data-section="backup"
-            onclick="navigate('backup')"
+            onclick="
+              navigate('backup');
+              return false;
+            "
           >
             <i class="ph ph-floppy-disk nav-icon"></i>
             <span class="nav-label">Backup</span>
@@ -1296,13 +1327,48 @@
 
         <div class="sidebar-footer">
           <div class="sidebar-tip" id="sidebarConnection">
-            <span style="display: flex; align-items: center; gap: 6px;">
-              <span id="sidebarTgDot" style="width: 8px; height: 8px; border-radius: 50%; background: var(--neon-red); display: inline-block; flex-shrink: 0;"></span>
-              <span id="sidebarTgText" style="font-size: 12px; color: var(--text-muted);">TG: Aguardando...</span>
+            <span style="display: flex; align-items: center; gap: 6px">
+              <span
+                id="sidebarTgDot"
+                style="
+                  width: 8px;
+                  height: 8px;
+                  border-radius: 50%;
+                  background: var(--neon-red);
+                  display: inline-block;
+                  flex-shrink: 0;
+                "
+              ></span>
+              <span
+                id="sidebarTgText"
+                style="font-size: 12px; color: var(--text-muted)"
+                >TG: Aguardando...</span
+              >
             </span>
-            <span style="display: flex; align-items: center; gap: 6px; margin-top: 4px;">
-              <span id="sidebarMonDot" style="width: 8px; height: 8px; border-radius: 50%; background: var(--neon-red); display: inline-block; flex-shrink: 0;"></span>
-              <span id="sidebarMonText" style="font-size: 12px; color: var(--text-muted);">Monitor: Parado</span>
+            <span
+              style="
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                margin-top: 4px;
+              "
+            >
+              <span
+                id="sidebarMonDot"
+                style="
+                  width: 8px;
+                  height: 8px;
+                  border-radius: 50%;
+                  background: var(--neon-red);
+                  display: inline-block;
+                  flex-shrink: 0;
+                "
+              ></span>
+              <span
+                id="sidebarMonText"
+                style="font-size: 12px; color: var(--text-muted)"
+                >Monitor: Parado</span
+              >
             </span>
           </div>
         </div>
@@ -1551,9 +1617,17 @@
                     Salvar Config
                   </button>
                 </div>
-                <p style="font-size: 11px; color: var(--text-muted); margin-top: 10px; text-align: center;">
-                  <i class="ph ph-info"></i> "Testar Bot Telegram" envia uma mensagem no grupo
-                  <strong>Promo-Teste</strong> via Bot API para confirmar que o bot está funcionando.
+                <p
+                  style="
+                    font-size: 11px;
+                    color: var(--text-muted);
+                    margin-top: 10px;
+                    text-align: center;
+                  "
+                >
+                  <i class="ph ph-info"></i> "Testar Bot Telegram" envia uma
+                  mensagem no grupo <strong>Promo-Teste</strong> via Bot API
+                  para confirmar que o bot está funcionando.
                 </p>
               </div>
             </div>
@@ -1606,7 +1680,9 @@
                     <strong>Webhooks</strong>
                   </li>
                   <li>Clique em <strong>"Criar Webhook"</strong></li>
-                  <li>Defina um nome e copie a <strong>URL do Webhook</strong></li>
+                  <li>
+                    Defina um nome e copie a <strong>URL do Webhook</strong>
+                  </li>
                   <li>
                     Adicione a URL no arquivo <code>.env</code> como
                     <code>DISCORD_WEBHOOK_URL</code>
@@ -1835,7 +1911,7 @@
                 <button
                   onclick="forceCheck()"
                   class="btn btn-outline"
-                  style="margin-left: 8px;"
+                  style="margin-left: 8px"
                 >
                   <i class="ph ph-magnifying-glass"></i>
                   Forçar Verificação
@@ -2033,7 +2109,14 @@
         document.getElementById("pageTitle").textContent =
           titles[section] || section;
 
-        if (window.innerWidth <= 1024) toggleSidebar();
+        if (window.innerWidth <= 1024) {
+          const sidebar = document.getElementById("sidebar");
+          const overlay = document.getElementById("sidebarOverlay");
+          if (sidebar && overlay) {
+            sidebar.classList.remove("open");
+            overlay.classList.remove("show");
+          }
+        }
 
         if (section === "telegram") loadTelegramConfig();
         if (section === "discord") {
@@ -2098,7 +2181,8 @@
           const codeSection = document.getElementById("auth-code-section");
           const statusBadge = document.getElementById("tg-status");
 
-          if (!statusCard || !statusText || !sendSection || !codeSection) return;
+          if (!statusCard || !statusText || !sendSection || !codeSection)
+            return;
 
           if (data.data.isConnected) {
             statusCard.style.borderLeft = "4px solid var(--neon-green)";
@@ -2130,8 +2214,7 @@
             codeSection.style.display = "none";
             if (statusBadge) {
               statusBadge.className = "badge badge-error";
-              statusBadge.innerHTML =
-                '<i class="ph ph-plug"></i> Desconectado';
+              statusBadge.innerHTML = '<i class="ph ph-plug"></i> Desconectado';
             }
           }
         } catch (err) {
@@ -2226,7 +2309,10 @@
           const data = await apiFetch("/api/monitor/test-connection", {
             method: "POST",
           });
-          showToast(data.message || "Mensagem enviada ao grupo de teste!", "success");
+          showToast(
+            data.message || "Mensagem enviada ao grupo de teste!",
+            "success",
+          );
         } catch (err) {
           showToast(
             err.message ||
@@ -2494,7 +2580,8 @@
           btn.innerHTML = '<i class="ph ph-pause"></i> Parar Monitor';
           statValue.textContent = "Rodando";
           statValue.className = "stat-value status-online";
-          if (sidebarMonDot) sidebarMonDot.style.background = "var(--neon-green)";
+          if (sidebarMonDot)
+            sidebarMonDot.style.background = "var(--neon-green)";
           if (sidebarMonText) sidebarMonText.textContent = "Monitor: Rodando";
         } else {
           status.className = "badge badge-error";
@@ -2522,13 +2609,15 @@
           if (sidebarTgText) sidebarTgText.textContent = "TG: Conectado";
         } else if (hasSession) {
           badge.className = "badge badge-success";
-          badge.innerHTML = '<i class="ph ph-check-circle"></i> TG: Autenticado (ocioso)';
+          badge.innerHTML =
+            '<i class="ph ph-check-circle"></i> TG: Autenticado (ocioso)';
           if (sidebarTgDot) sidebarTgDot.style.background = "var(--neon-green)";
           if (sidebarTgText) sidebarTgText.textContent = "TG: Autenticado";
         } else if (configured) {
           badge.className = "badge badge-warning";
           badge.innerHTML = '<i class="ph ph-warning"></i> TG: Não autenticado';
-          if (sidebarTgDot) sidebarTgDot.style.background = "var(--neon-yellow)";
+          if (sidebarTgDot)
+            sidebarTgDot.style.background = "var(--neon-yellow)";
           if (sidebarTgText) sidebarTgText.textContent = "TG: Não autenticado";
         } else {
           badge.className = "badge badge-error";
@@ -2551,9 +2640,15 @@
         try {
           const data = await apiFetch("/api/monitor/connection-status");
           const tgConnected = data.data && data.data.telegramConnected;
-          const authData = await apiFetch("/api/telegram-config/auth-status").catch(() => null);
-          const configured = authData && authData.data && (authData.data.isConfigured || authData.data.hasSession);
-          const hasSession = authData && authData.data && authData.data.hasSession;
+          const authData = await apiFetch(
+            "/api/telegram-config/auth-status",
+          ).catch(() => null);
+          const configured =
+            authData &&
+            authData.data &&
+            (authData.data.isConfigured || authData.data.hasSession);
+          const hasSession =
+            authData && authData.data && authData.data.hasSession;
           updateConnectionUI(tgConnected, configured, hasSession);
         } catch (err) {
           // Silencioso
@@ -2564,9 +2659,12 @@
         const btn = document.getElementById("monitor-test-tg-btn");
         if (!btn) return;
         btn.disabled = true;
-        btn.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Testando fluxo...';
+        btn.innerHTML =
+          '<i class="ph ph-spinner ph-spin"></i> Testando fluxo...';
         try {
-          const data = await apiFetch("/api/monitor/test-flow", { method: "POST" });
+          const data = await apiFetch("/api/monitor/test-flow", {
+            method: "POST",
+          });
           const tg = data.data?.telegram || "—";
           const dc = data.data?.discord || "—";
           showToast(
@@ -2578,7 +2676,8 @@
           showToast(err.message || "Erro ao testar fluxo completo", "error");
         } finally {
           btn.disabled = false;
-          btn.innerHTML = '<i class="ph ph-paper-plane-right"></i> Testar Fluxo Completo';
+          btn.innerHTML =
+            '<i class="ph ph-paper-plane-right"></i> Testar Fluxo Completo';
         }
       }
 
