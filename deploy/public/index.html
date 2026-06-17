@@ -1015,6 +1015,8 @@
         }
         .sidebar-overlay.show {
           display: block;
+          left: var(--sidebar-width);
+          width: calc(100% - var(--sidebar-width));
         }
         .stats-grid {
           grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
