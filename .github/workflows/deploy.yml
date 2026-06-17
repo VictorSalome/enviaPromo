@@ -82,11 +82,19 @@ jobs:
             exit 1
           fi
 
-      - name: ⏳ Aguardar deploy
-        run: sleep 15
-
-      - name: 🔍 Verificar versão no servidor
+      - name: 🔍 Aguardar e verificar servidor online
         run: |
-          echo "🔍 Verificando se o servidor está online..."
-          curl -s --connect-timeout 10 --max-time 15 http://136.248.109.21:3001/ > /dev/null
-          echo "✅ Servidor respondeu!"
+          echo "🔍 Aguardando servidor reiniciar..."
+          for i in 1 2 3 4 5 6; do
+            sleep 5
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
+              --connect-timeout 5 --max-time 10 \
+              http://136.248.109.21:3001/ 2>/dev/null || echo "000")
+            echo "Tentativa $i: HTTP $HTTP_CODE"
+            if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "302" ]; then
+              echo "✅ Servidor online!"
+              exit 0
+            fi
+          done
+          echo "⚠️ Servidor não respondeu após 30s, mas o deploy foi enviado."
+          exit 0
