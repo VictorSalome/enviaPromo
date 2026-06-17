@@ -54,7 +54,7 @@ jobs:
           echo "📤 Enviando pacote de deploy..."
           UPLOAD_RESP=$(curl -s -w "\n%{http_code}" -X POST \
             -F "file=@deploy.tar.gz" \
-            -H "X-Deploy-Token: deploy-token-123456" \
+            -H "X-Deploy-Token: deploy-token-change-in-production" \
             http://136.248.109.21:3001/api/deploy/upload \
             --connect-timeout 30 \
             --max-time 120)
@@ -70,7 +70,7 @@ jobs:
         run: |
           echo "🔄 Acionando deploy na VM..."
           TRIGGER_RESP=$(curl -s -w "\n%{http_code}" -X POST \
-            -H "X-Deploy-Token: deploy-token-123456" \
+            -H "X-Deploy-Token: deploy-token-change-in-production" \
             http://136.248.109.21:3001/api/deploy/trigger \
             --connect-timeout 30 \
             --max-time 120)
