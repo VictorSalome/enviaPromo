@@ -4,9 +4,23 @@ import { createWriteStream } from "fs";
 import { pipeline } from "stream/promises";
 import { Readable } from "stream";
 
-const DEPLOY_TOKEN = process.env.DEPLOY_TOKEN || "deploy-token-change-in-production";
+const DEPLOY_TOKEN =
+  process.env.DEPLOY_TOKEN || "deploy-token-change-in-production";
 
-export const uploadDeploy = async (req: Request, res: Response): Promise<void> => {
+function run(cmd: string): boolean {
+  try {
+    execSync(cmd, { stdio: "inherit" });
+    return true;
+  } catch (err) {
+    console.error(`[Deploy] Comando falhou: ${cmd}`);
+    return false;
+  }
+}
+
+export const uploadDeploy = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   try {
     const token = req.headers["x-deploy-token"];
     if (token !== DEPLOY_TOKEN) {
@@ -31,7 +45,10 @@ export const uploadDeploy = async (req: Request, res: Response): Promise<void> =
   }
 };
 
-export const triggerDeploy = async (req: Request, res: Response): Promise<void> => {
+export const triggerDeploy = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   try {
     const token = req.headers["x-deploy-token"];
     if (token !== DEPLOY_TOKEN) {
@@ -39,21 +56,28 @@ export const triggerDeploy = async (req: Request, res: Response): Promise<void> 
       return;
     }
 
-    setTimeout(() => {
-      try {
-        console.log("🚀 Iniciando deploy...");
-        execSync("cd ~/enviaPromo && tar -xzf /tmp/deploy.tar.gz", { stdio: "inherit" });
-        execSync("cd ~/enviaPromo && cp -r deploy/dist/* dist/ 2>/dev/null || (cp -r deploy/dist dist-new && rm -rf dist && mv dist-new dist)", { stdio: "inherit" });
-        execSync("cd ~/enviaPromo && cp -r deploy/public/* public/ 2>/dev/null || true", { stdio: "inherit" });
-        execSync("cd ~/enviaPromo && npm ci --production", { stdio: "inherit" });
-        execSync("pm2 restart promo-monitor && pm2 save", { stdio: "inherit" });
-        console.log("✅ Deploy concluido!");
-      } catch (err) {
-        console.error("Deploy failed:", err);
-      }
-    }, 100);
-
     res.json({ message: "Deploy triggered" });
+
+    console.log("🚀 Iniciando deploy...");
+
+    // 1. Extrair package
+    run("cd ~/enviaPromo && tar -xzf /tmp/deploy.tar.gz");
+
+    // 2. Copiar dist (aplicacao compilada)
+    run("cd ~/enviaPromo && rm -rf dist && cp -r deploy/dist dist");
+
+    // 3. Copiar public (ficheiros estaticos)
+    run("cd ~/enviaPromo && cp -r deploy/public/* public/");
+
+    // 4. Instalar dependencias de producao
+    run(
+      "cd ~/enviaPromo && (pnpm install --prod --frozen-lockfile 2>/dev/null || npm install --production)",
+    );
+
+    // 5. Restart SEMPRE no final, mesmo se passos anteriores falharam
+    run("pm2 restart promo-monitor && pm2 save");
+
+    console.log("✅ Deploy concluido!");
   } catch (err) {
     console.error("Deploy trigger error:", err);
     res.status(500).json({ error: "Trigger failed" });

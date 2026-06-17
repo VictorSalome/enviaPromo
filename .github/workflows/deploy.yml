@@ -52,23 +52,41 @@ jobs:
       - name: 📤 Upload deploy package
         run: |
           echo "📤 Enviando pacote de deploy..."
-          curl -X POST \
+          UPLOAD_RESP=$(curl -s -w "\n%{http_code}" -X POST \
             -F "file=@deploy.tar.gz" \
             -H "X-Deploy-Token: deploy-token-123456" \
             http://136.248.109.21:3001/api/deploy/upload \
             --connect-timeout 30 \
-            --max-time 120
+            --max-time 120)
+          HTTP_CODE=$(echo "$UPLOAD_RESP" | tail -1)
+          BODY=$(echo "$UPLOAD_RESP" | head -n -1)
+          echo "Resposta: $BODY (HTTP $HTTP_CODE)"
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "❌ Upload falhou!"
+            exit 1
+          fi
 
       - name: 🔄 Trigger deploy
         run: |
           echo "🔄 Acionando deploy na VM..."
-          curl -X POST \
+          TRIGGER_RESP=$(curl -s -w "\n%{http_code}" -X POST \
             -H "X-Deploy-Token: deploy-token-123456" \
             http://136.248.109.21:3001/api/deploy/trigger \
             --connect-timeout 30 \
-            --max-time 120
+            --max-time 120)
+          HTTP_CODE=$(echo "$TRIGGER_RESP" | tail -1)
+          BODY=$(echo "$TRIGGER_RESP" | head -n -1)
+          echo "Resposta: $BODY (HTTP $HTTP_CODE)"
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "❌ Trigger falhou!"
+            exit 1
+          fi
 
-      - name: ✅ Notify success
+      - name: ⏳ Aguardar deploy
+        run: sleep 15
+
+      - name: 🔍 Verificar versão no servidor
         run: |
-          echo "🎉 Deploy realizado com sucesso!"
-          echo "🌐 Aplicacao: http://136.248.109.21:3001"
+          echo "🔍 Verificando se o servidor está online..."
+          curl -s --connect-timeout 10 --max-time 15 http://136.248.109.21:3001/ > /dev/null
+          echo "✅ Servidor respondeu!"
