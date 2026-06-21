@@ -3,13 +3,22 @@ import * as filterRepo from './filter.repository.js';
 
 export const list = async (_req: Request, res: Response): Promise<void> => {
   try {
-    const categories = await filterRepo.findAllCategories();
-    const filters = await filterRepo.findAllFilters();
+    const [categories, filters] = await Promise.all([
+      filterRepo.findAllCategories(),
+      filterRepo.findAllFilters(),
+    ]);
     
-    // Agrupa filtros por categoria
+    // Agrupa filtros por categoria usando Map para O(n+m)
+    const filtersByCategory = new Map<number, any[]>();
+    for (const f of filters) {
+      const existing = filtersByCategory.get(f.category_id) || [];
+      existing.push(f);
+      filtersByCategory.set(f.category_id, existing);
+    }
+    
     const categoriesWithFilters = categories.map((cat: any) => ({
       ...cat,
-      filters: filters.filter((f: any) => f.category_id === cat.id)
+      filters: filtersByCategory.get(cat.id) || []
     }));
     
     res.json({ success: true, data: categoriesWithFilters });
@@ -105,12 +114,10 @@ export const updateFilter = async (req: Request, res: Response): Promise<void> =
     const id = Number(req.params.id);
     const { name, type, keywords } = req.body;
     
-    // Buscar filtro atual para pegar category_id
-    const allFilters = await filterRepo.findAllFilters();
-    const currentFilter = allFilters.find((f: any) => f.id === id);
+    // Buscar filtro atual (1 query em vez de carregar todos)
+    const currentFilter = await filterRepo.findFilterById(id);
     
     if (name && name.trim() !== '' && currentFilter) {
-      // Verificar se outro filtro na mesma categoria já tem esse nome
       const existing = await filterRepo.findFilterByNameAndCategory(name.trim(), currentFilter.category_id);
       if (existing && existing.id !== id) {
         res.status(409).json({ success: false, message: 'Já existe um filtro com esse nome nesta categoria' });
@@ -168,8 +175,10 @@ export const deleteCategory = async (req: Request, res: Response): Promise<void>
 
 export const getStats = async (_req: Request, res: Response): Promise<void> => {
   try {
-    const active = await filterRepo.getActiveFiltersCount();
-    const total = await filterRepo.getTotalFiltersCount();
+    const [active, total] = await Promise.all([
+      filterRepo.getActiveFiltersCount(),
+      filterRepo.getTotalFiltersCount(),
+    ]);
     res.json({ success: true, data: { active, total } });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Erro ao obter estatísticas' });

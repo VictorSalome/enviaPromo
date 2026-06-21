@@ -12,13 +12,18 @@ import {
   getActiveFiltersCount,
 } from "../filter/filter.repository.js";
 import { isDuplicate, addSentMessage } from "../dedup/dedup.repository.js";
-import { sendDiscordPromo } from "../discord/discord.service.js";
+import { discordQueue } from "../discord/discord.service.js";
 import { getMonitorStatus, setRunningState, setTelegramConnected } from "./monitor.state.js";
 
 let client: TelegramClient | null = null;
 let isProcessing = false;
 let consecutiveErrors = 0;
 let lastMessageIds: Map<string, number> = new Map();
+
+// Cache de canais ativos (evita query a cada msg em tempo real)
+let cachedActiveChannels: Set<string> | null = null;
+let channelsCacheTimestamp = 0;
+const CHANNELS_CACHE_TTL = 30_000; // 30 segundos
 
 // Configurações inteligentes de retry (baseado na skill Telegram)
 const RETRY_CONFIG = {
@@ -94,16 +99,31 @@ export async function startTelegramMonitor(): Promise<void> {
       `[Monitor] Verificando ${activeChannels.length} canais (Modo: ${noFilterMode ? "SEM FILTRO" : "FILTRADO"})`,
     );
 
+    // Buscar filtros UMA VEZ antes do loop (não por canal)
+    const filters = noFilterMode ? [] : await findAllFilters();
+
+    // Invalidar cache de canais ativos
+    cachedActiveChannels = null;
+
+    // Processar canais em batch (3 por vez para evitar flood do Telegram)
     let messagesFound = 0;
-    for (const channel of activeChannels) {
-      console.log(`[Monitor] Processando canal: ${channel.username}`);
-      const count = await processChannel(channel.username, noFilterMode);
-      if (count > 0) {
-        console.log(`[Monitor] Canal ${channel.username}: ${count} mensagens enviadas`);
-      } else {
-        console.log(`[Monitor] Canal ${channel.username}: sem mensagens novas`);
-      }
-      messagesFound += count;
+    const BATCH_SIZE = 3;
+    for (let i = 0; i < activeChannels.length; i += BATCH_SIZE) {
+      const batch = activeChannels.slice(i, i + BATCH_SIZE);
+      const results = await Promise.allSettled(
+        batch.map(async (ch) => {
+          const count = await processChannel(ch.username, noFilterMode, filters);
+          if (count > 0) {
+            console.log(`[Monitor] Canal ${ch.username}: ${count} mensagens enviadas`);
+          } else {
+            console.log(`[Monitor] Canal ${ch.username}: sem mensagens novas`);
+          }
+          return count;
+        })
+      );
+      messagesFound += results.reduce((sum, r) =>
+        sum + (r.status === "fulfilled" ? r.value : 0), 0
+      );
     }
 
     // Ajustar intervalo dinamicamente (mais rápido se encontrou mensagens)
@@ -175,6 +195,23 @@ async function reconnectClient(): Promise<void> {
   }
 }
 
+async function getActiveChannelUsernames(): Promise<Set<string>> {
+  const now = Date.now();
+  if (!cachedActiveChannels || now - channelsCacheTimestamp > CHANNELS_CACHE_TTL) {
+    const channels = await findAll();
+    cachedActiveChannels = new Set(
+      channels
+        .filter((ch: any) => {
+          const isActive = ch.is_active || ch.isActive;
+          return isActive === 1 || isActive === true;
+        })
+        .map((ch: any) => `@${ch.username.toLowerCase()}`)
+    );
+    channelsCacheTimestamp = now;
+  }
+  return cachedActiveChannels;
+}
+
 function setupRealtimeHandler(): void {
   if (!client || !getMonitorStatus().running) return;
 
@@ -190,7 +227,6 @@ function setupRealtimeHandler(): void {
 
       let channelUsername = "";
 
-      // Tentar obter username do chat
       if (message.chat?.username) {
         channelUsername = `@${message.chat.username.toLowerCase()}`;
       } else {
@@ -204,15 +240,9 @@ function setupRealtimeHandler(): void {
 
       if (!channelUsername) return;
 
-      // Verificar se é um canal monitorado
-      const activeChannels = await findAll();
-      const isActive = activeChannels.some((ch: any) => {
-        const username = ch.username?.toLowerCase();
-        const isActiveFlag = ch.is_active || ch.isActive;
-        return username === channelUsername && (isActiveFlag === 1 || isActiveFlag === true);
-      });
-
-      if (!isActive) return;
+      // Usar cache para verificar se é canal monitorado
+      const activeChannels = await getActiveChannelUsernames();
+      if (!activeChannels.has(channelUsername)) return;
 
       console.log(`[Monitor][Tempo Real] Nova mensagem em ${channelUsername}`);
 
@@ -240,6 +270,7 @@ function scheduleNextCheck(): void {
 async function processChannel(
   channelUsername: string,
   noFilterMode: boolean,
+  filters: any[],
 ): Promise<number> {
   try {
     if (!client) return 0;
@@ -282,7 +313,6 @@ async function processChannel(
     }
 
     let sentCount = 0;
-    const filters = noFilterMode ? [] : await findAllFilters();
 
     for (const message of newMessages.reverse()) {
       // Processar do mais antigo para o mais novo
@@ -411,7 +441,8 @@ async function sendPromoMessage(
 
     const img = await extractImageUrl(text, message);
 
-    await sendDiscordPromo({
+    // Enfileirar envio (não bloqueia o loop)
+    discordQueue.enqueue({
       product,
       price,
       originalPrice,

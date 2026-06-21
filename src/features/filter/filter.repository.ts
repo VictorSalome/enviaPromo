@@ -25,6 +25,11 @@ export const findFilterByNameAndCategory = async (name: string, categoryId: numb
   return db.get('SELECT * FROM filters WHERE name = ? AND category_id = ?', name, categoryId);
 };
 
+export const findFilterById = async (id: number) => {
+  const db = await getDb();
+  return db.get('SELECT * FROM filters WHERE id = ?', id);
+};
+
 export const createCategory = async (category: any) => {
   const db = await getDb();
   const result = await db.run(

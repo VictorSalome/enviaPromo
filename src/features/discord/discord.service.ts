@@ -215,3 +215,38 @@ export const sendMonitorStarted = async (): Promise<boolean> => {
 
   return sendWebhook({ embeds: [embed], username: "Promo Monitor 🚀" });
 };
+
+// ========== FILA DE ENVIO COM RATE LIMIT ==========
+// Discord limita a 5 msgs por 2s por webhook.
+// Fila garante 1 msg a cada 500ms (2 msg/s), dentro do limite.
+
+class DiscordSendQueue {
+  private queue: PromoData[] = [];
+  private processing = false;
+  private readonly DELAY_MS = 500; // 2 msg/s (seguro para Discord)
+
+  enqueue(data: PromoData): void {
+    this.queue.push(data);
+    if (!this.processing) this.drain();
+  }
+
+  private async drain(): Promise<void> {
+    this.processing = true;
+    while (this.queue.length > 0) {
+      const item = this.queue.shift()!;
+      await sendDiscordPromo(item).catch((err) =>
+        logger.error(`[Fila Discord] Erro ao enviar: ${err}`, "Discord")
+      );
+      if (this.queue.length > 0) {
+        await new Promise((r) => setTimeout(r, this.DELAY_MS));
+      }
+    }
+    this.processing = false;
+  }
+
+  get pending(): number {
+    return this.queue.length;
+  }
+}
+
+export const discordQueue = new DiscordSendQueue();

@@ -25,30 +25,19 @@ export const addSentMessage = async (data: {
 
 export const isDuplicate = async (link?: string, product?: string, price?: number, minutes: number = 30): Promise<boolean> => {
   const db = await getDb();
-  
-  if (link) {
-    const existing = await db.get(
-      `SELECT * FROM sent_messages 
-       WHERE link = ? 
-       AND price = ?
-       AND sent_at > datetime('now', '-${minutes} minutes')`,
-      link, price || 0
-    );
-    if (existing) return true;
-  }
-  
-  if (product) {
-    const existing = await db.get(
-      `SELECT * FROM sent_messages 
-       WHERE product = ? 
-       AND price = ?
-       AND sent_at > datetime('now', '-${minutes} minutes')`,
-      product, price || 0
-    );
-    if (existing) return true;
-  }
-  
-  return false;
+  const p = price || 0;
+
+  const existing = await db.get(
+    `SELECT 1 FROM sent_messages 
+     WHERE (
+       (link = ? AND price = ?)
+       OR (product = ? AND price = ?)
+     )
+     AND sent_at > datetime('now', '-' || ? || ' minutes')
+     LIMIT 1`,
+    link || '', p, product || '', p, minutes
+  );
+  return !!existing;
 };
 
 export const getRecentMessages = async (limit: number = 50): Promise<any[]> => {

@@ -107,6 +107,9 @@ const createIndexes = async (): Promise<void> => {
     CREATE INDEX IF NOT EXISTS idx_sent_link ON sent_messages(link);
     CREATE INDEX IF NOT EXISTS idx_sent_product ON sent_messages(product);
     CREATE INDEX IF NOT EXISTS idx_sent_time ON sent_messages(sent_at);
+    CREATE INDEX IF NOT EXISTS idx_sent_link_price_time ON sent_messages(link, price, sent_at);
+    CREATE INDEX IF NOT EXISTS idx_sent_product_price_time ON sent_messages(product, price, sent_at);
+    CREATE INDEX IF NOT EXISTS idx_sent_channel_time ON sent_messages(channel, sent_at);
     CREATE INDEX IF NOT EXISTS idx_filters_category ON filters(category_id);
     CREATE INDEX IF NOT EXISTS idx_filters_active ON filters(is_active);
     CREATE INDEX IF NOT EXISTS idx_channels_active ON channels(is_active);

@@ -3,30 +3,24 @@ import { getDb } from '../../core/database.js';
 export const getStats = async (): Promise<any> => {
   const db = await getDb();
   
-  const today = await db.get(`
-    SELECT COUNT(*) as count FROM sent_messages 
-    WHERE date(sent_at) = date('now')
-  `);
-  
-  const week = await db.get(`
-    SELECT COUNT(*) as count FROM sent_messages 
-    WHERE sent_at > datetime('now', '-7 days')
-  `);
-  
-  const month = await db.get(`
-    SELECT COUNT(*) as count FROM sent_messages 
-    WHERE sent_at > datetime('now', '-30 days')
-  `);
-  
-  const channels = await db.get('SELECT COUNT(*) as count FROM channels WHERE is_active = 1');
-  const filters = await db.get('SELECT COUNT(*) as count FROM filters WHERE is_active = 1');
+  const [today, week, month, channels, filters] = await Promise.all([
+    db.get(`SELECT COUNT(*) as count FROM sent_messages 
+      WHERE sent_at >= datetime('now', 'start of day') 
+      AND sent_at < datetime('now', 'start of day', '+1 day')`),
+    db.get(`SELECT COUNT(*) as count FROM sent_messages 
+      WHERE sent_at > datetime('now', '-7 days')`),
+    db.get(`SELECT COUNT(*) as count FROM sent_messages 
+      WHERE sent_at > datetime('now', '-30 days')`),
+    db.get('SELECT COUNT(*) as count FROM channels WHERE is_active = 1'),
+    db.get('SELECT COUNT(*) as count FROM filters WHERE is_active = 1'),
+  ]);
   
   return {
-    today: today.count,
-    week: week.count,
-    month: month.count,
-    activeChannels: channels.count,
-    activeFilters: filters.count
+    today: today?.count || 0,
+    week: week?.count || 0,
+    month: month?.count || 0,
+    activeChannels: channels?.count || 0,
+    activeFilters: filters?.count || 0
   };
 };
 
