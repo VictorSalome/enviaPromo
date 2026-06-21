@@ -1,0 +1,16 @@
+:root {
+  --bg-primary: #0a0a0f;
+  --bg-secondary: #111118;
+  --bg-card: rgba(17, 17, 24, 0.85);
+  --bg-hover: rgba(0, 240, 255, 0.05);
+  --neon-red: #ff3366;
+  --neon-cyan: #00f0ff;
+  --neon-green: #00ff88;
+  --neon-yellow: #ffcc00;
+  --neon-purple: #b829dd;
+  --text-primary: #e8e8f0;
+  --text-secondary: #8890a0;
+  --text-muted: #556070;
+  --border-glow: rgba(0, 240, 255, 0.15);
+  --sidebar-width: 260px;
+}
