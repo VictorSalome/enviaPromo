@@ -1,6 +1,8 @@
 import { buscarVagas, buscarVagaFonte, getFontes } from './feed.service.js';
 import { ranquearVagas } from './match.service.js';
 import { executarPipeline } from './autoApply.service.js';
+import { parsearLinkedInHTML, normalizarVagasLinkedIn } from './linkedin.service.js';
+import { iniciarScheduler, pararScheduler, executarBusca, getStatus } from './scheduler.service.js';
 import { logInfo, logError } from '../utils/logger.js';
 
 /**
@@ -90,6 +92,52 @@ export const autoApplyController = async (req, res) => {
     res.json({ ok: true, ...resultado });
   } catch (err) {
     logError(`Erro no auto-apply: ${err.message}`);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+};
+
+// ── Scheduler ──
+
+export const schedulerStatusController = (req, res) => {
+  res.json({ ok: true, ...getStatus() });
+};
+
+export const schedulerStartController = (req, res) => {
+  const { cron, tags, minScore, autoSend } = req.body || {};
+  const resultado = iniciarScheduler({ cron, tags, minScore, autoSend });
+  res.json({ ok: true, ...resultado });
+};
+
+export const schedulerStopController = (req, res) => {
+  const resultado = pararScheduler();
+  res.json({ ok: true, ...resultado });
+};
+
+export const schedulerRunNowController = async (req, res) => {
+  try {
+    const { tags, minScore, autoSend } = req.body || {};
+    const resultado = await executarBusca({ tags, minScore, autoSend });
+    res.json({ ok: true, ...resultado });
+  } catch (err) {
+    logError(`Erro na execução manual: ${err.message}`);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+};
+
+// ── LinkedIn ──
+
+export const linkedinParseController = (req, res) => {
+  try {
+    const { html } = req.body || {};
+    if (!html) return res.status(400).json({ ok: false, error: 'HTML obrigatório' });
+
+    const vagas = parsearLinkedInHTML(html);
+    const normalizadas = normalizarVagasLinkedIn(vagas);
+    const ranqueadas = ranquearVagas(normalizadas);
+
+    res.json({ ok: true, total: ranqueadas.length, vagas: ranqueadas });
+  } catch (err) {
+    logError(`Erro no parse LinkedIn: ${err.message}`);
     res.status(500).json({ ok: false, error: err.message });
   }
 };
