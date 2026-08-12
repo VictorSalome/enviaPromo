@@ -86,11 +86,17 @@ app.get('/envia-promo/login', (_, res) => {
 
 // ── Curriculo frontend ──
 const curriculoPublic = path.join(__dirname, '../modules/resumes/public');
-app.use('/envia-curriculo', requireAuth, express.static(curriculoPublic));
-app.get('/envia-curriculo', requireAuth, (_, res) => {
+const requireAuthRedirect = (req: express.Request, res: express.Response, next: express.NextFunction): void => {
+  if (req.session.user) { next(); } else { res.redirect('/envia-curriculo/login'); }
+};
+app.get('/envia-curriculo/login', (_, res) => {
+  res.sendFile(path.join(curriculoPublic, 'login.html'));
+});
+app.use('/envia-curriculo', requireAuthRedirect, express.static(curriculoPublic));
+app.get('/envia-curriculo', requireAuthRedirect, (_, res) => {
   res.sendFile(path.join(curriculoPublic, 'index.html'));
 });
-app.get('/envia-curriculo/smtp-config', requireAuth, (_, res) => {
+app.get('/envia-curriculo/smtp-config', requireAuthRedirect, (_, res) => {
   res.sendFile(path.join(curriculoPublic, 'smtp-config.html'));
 });
 
