@@ -17,7 +17,7 @@ import testConnectionRoutes from '../features/test-connection/test-connection.ro
 import priceAlertRoutes from '../features/price-alert/price-alert.routes.js';
 import deployRoutes from '../features/deploy/deploy.routes.js';
 // @ts-ignore
-import resumesApp from '../modules/resumes/server.js';
+import resumesApp from '../curriculos/server.js';
 import { requireAuth } from '../features/auth/auth.middleware.js';
 
 declare module 'express-session' {
@@ -85,7 +85,7 @@ app.get('/envia-promo/login', (_, res) => {
 });
 
 // ── Curriculo frontend ──
-const curriculoPublic = path.join(__dirname, '../modules/resumes/public');
+const curriculoPublic = path.join(__dirname, '../curriculos/public');
 const requireAuthRedirect = (req: express.Request, res: express.Response, next: express.NextFunction): void => {
   if (req.session.user) { next(); } else { res.redirect('/envia-curriculo/login'); }
 };

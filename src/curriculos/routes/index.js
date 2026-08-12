@@ -1,7 +1,7 @@
 import express from 'express';
-import { analisarPublicacaoController, statusController } from '../controllers/analisarPublicacaoController.js';
-import { visualizarCurriculoHTML, enviarCurriculoTesteHTML } from '../controllers/curriculoTesteController.js';
-import { validateContentType, requestTimeout } from '../middleware/errorHandler.js';
+import { analisarPublicacaoController, statusController } from '../controllers/analisar-publicacao.controller.js';
+import { visualizarCurriculoHTML, enviarCurriculoTesteHTML } from '../controllers/curriculo-teste.controller.js';
+import { validateContentType, requestTimeout } from '../middleware/error-handler.js';
 import { loggerMiddleware } from '../utils/logger.js';
 import config from '../config/index.js';
 

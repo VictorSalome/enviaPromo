@@ -2,7 +2,7 @@ import {
   gerarResumo,
   obterSkillsDisponiveis,
   validarSkill,
-} from "./resumoProfissionalService.js";
+} from "./resumo-profissional.service.js";
 
 /**
  * Arquivo de teste para demonstrar o funcionamento do serviço de resumo profissional

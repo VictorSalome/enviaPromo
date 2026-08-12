@@ -2,11 +2,11 @@ import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { logInfo, logError, logWarn } from '../utils/logger.js';
-import { personalizarCurriculo } from '../services/curriculoPersonalizadorService.js';
-import { gerarPdfCurriculo } from '../services/pdfGeneratorService.js';
-import { enviarCurriculo, validarConfiguracaoEmail } from '../services/emailService.js';
-import { gerarResumo } from '../services/resumoProfissionalService.js';
-import { asyncHandler, AppError } from '../middleware/errorHandler.js';
+import { personalizarCurriculo } from '../services/curriculo-personalizador.service.js';
+import { gerarPdfCurriculo } from '../services/pdf-generator.service.js';
+import { enviarCurriculo, validarConfiguracaoEmail } from '../services/email.service.js';
+import { gerarResumo } from '../services/resumo-profissional.service.js';
+import { asyncHandler, AppError } from '../middleware/error-handler.js';
 import config from '../config/index.js';
 
 const __filename = fileURLToPath(import.meta.url);

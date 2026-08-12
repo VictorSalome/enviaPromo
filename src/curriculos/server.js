@@ -11,19 +11,19 @@ import {
   testarSMTPController,
   obterConfigSMTPController,
   atualizarConfigSMTPController,
-} from "./controllers/analisarPublicacaoController.js";
-import { initializeSmtpRuntimeConfig } from "./services/smtpConfigService.js";
+} from "./controllers/analisar-publicacao.controller.js";
+import { initializeSmtpRuntimeConfig } from "./services/smtp-config.service.js";
 import {
   visualizarCurriculoHTML,
   enviarCurriculoTesteHTML,
-} from "./controllers/curriculoTesteController.js";
+} from "./controllers/curriculo-teste.controller.js";
 import {
   errorHandler,
   notFoundHandler,
   requestIdMiddleware,
   timeoutMiddleware,
   contentTypeMiddleware,
-} from "./middleware/errorHandler.js";
+} from "./middleware/error-handler.js";
 import { loggerMiddleware, logInfo, logError } from "./utils/logger.js";
 
 const app = express();
