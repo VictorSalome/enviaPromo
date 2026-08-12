@@ -77,8 +77,8 @@ export const executarPipeline = async ({
         status: "curriculo_gerado",
       };
 
-      // 4. Enviar email se autoSend=true e tiver email
-      if (autoSend && dadosVaga.emailContato) {
+      // 4. Enviar email se autoSend=true e tiver email e PDF
+      if (autoSend && dadosVaga.emailContato && nomeArquivo) {
         try {
           await enviarCurriculo({
             nomeArquivo,
