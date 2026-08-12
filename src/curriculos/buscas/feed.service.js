@@ -1,23 +1,23 @@
-import { httpGet } from '../shared/http.js';
-import { logInfo, logError } from '../utils/logger.js';
-import config from '../config/index.js';
+import { httpGet } from "../shared/http.js";
+import { logInfo, logError } from "../utils/logger.js";
+import config from "../config/index.js";
 
 // ── Fontes de vagas ──
 
 const FEEDS = {
   jobicy: {
-    name: 'Jobicy',
-    url: 'https://jobicy.com/api/v2/remote-jobs',
+    name: "Jobicy",
+    url: "https://jobicy.com/api/v2/remote-jobs",
     parse: parseJobicy,
   },
   arbeitnow: {
-    name: 'Arbeitnow',
-    url: 'https://www.arbeitnow.com/api/job-board-api',
+    name: "Arbeitnow",
+    url: "https://www.arbeitnow.com/api/job-board-api",
     parse: parseArbeitnow,
   },
   remotive: {
-    name: 'Remotive',
-    url: 'https://remotive.com/api/remote-jobs',
+    name: "Remotive",
+    url: "https://remotive.com/api/remote-jobs",
     parse: parseRemotive,
   },
 };
@@ -27,53 +27,54 @@ const FEEDS = {
 function parseJobicy(data) {
   if (!data?.jobs) return [];
   return data.jobs.map((j) => ({
-    source: 'jobicy',
+    source: "jobicy",
     externalId: String(j.id),
-    title: j.jobTitle || '',
-    company: j.companyName || '',
-    description: j.jobDescription || '',
-    url: j.url || '',
-    location: j.jobGeo || '',
-    salary: j.annualSalaryMin && j.annualSalaryMax
-      ? `${j.annualSalaryMin} - ${j.annualSalaryMax} ${j.annualSalaryCurrency || 'USD'}`
-      : '',
+    title: j.jobTitle || "",
+    company: j.companyName || "",
+    description: j.jobDescription || "",
+    url: j.url || "",
+    location: j.jobGeo || "",
+    salary:
+      j.annualSalaryMin && j.annualSalaryMax
+        ? `${j.annualSalaryMin} - ${j.annualSalaryMax} ${j.annualSalaryCurrency || "USD"}`
+        : "",
     tags: j.jobTags || [],
-    postedAt: j.pubDate || '',
-    type: j.jobType || '',
+    postedAt: j.pubDate || "",
+    type: j.jobType || "",
   }));
 }
 
 function parseArbeitnow(data) {
   if (!data?.data) return [];
   return data.data.map((j) => ({
-    source: 'arbeitnow',
+    source: "arbeitnow",
     externalId: String(j.id),
-    title: j.title || '',
-    company: j.company_name || '',
-    description: j.description || '',
-    url: j.url || '',
-    location: j.location || '',
-    salary: '',
+    title: j.title || "",
+    company: j.company_name || "",
+    description: j.description || "",
+    url: j.url || "",
+    location: j.location || "",
+    salary: "",
     tags: j.tags || [],
-    postedAt: j.created_at || '',
-    type: j.remote ? 'remote' : '',
+    postedAt: j.created_at || "",
+    type: j.remote ? "remote" : "",
   }));
 }
 
 function parseRemotive(data) {
   if (!Array.isArray(data)) return [];
   return data.map((j) => ({
-    source: 'remotive',
+    source: "remotive",
     externalId: String(j.id),
-    title: j.title || '',
-    company: j.company_name || '',
-    description: j.description || '',
-    url: j.url || '',
-    location: j.candidate_required_location || '',
-    salary: j.salary || '',
+    title: j.title || "",
+    company: j.company_name || "",
+    description: j.description || "",
+    url: j.url || "",
+    location: j.candidate_required_location || "",
+    salary: j.salary || "",
     tags: j.tags || [],
-    postedAt: j.publication_date || '',
-    type: j.job_type || '',
+    postedAt: j.publication_date || "",
+    type: j.job_type || "",
   }));
 }
 
@@ -87,8 +88,14 @@ function parseRemotive(data) {
  * @param {number} params.limit - Máximo de vagas por fonte
  * @returns {Promise<Object[]>} Lista normalizada de vagas
  */
-export const buscarVagas = async ({ query = '', tags = [], limit = 10 } = {}) => {
-  logInfo(`Buscando vagas: query="${query}" tags=${tags.join(',')} limit=${limit}`);
+export const buscarVagas = async ({
+  query = "",
+  tags = [],
+  limit = 10,
+} = {}) => {
+  logInfo(
+    `Buscando vagas: query="${query}" tags=${tags.join(",")} limit=${limit}`,
+  );
 
   const promises = Object.entries(FEEDS).map(async ([key, feed]) => {
     try {
@@ -111,7 +118,7 @@ export const buscarVagas = async ({ query = '', tags = [], limit = 10 } = {}) =>
 
   const resultados = await Promise.allSettled(promises);
   const todas = resultados
-    .filter((r) => r.status === 'fulfilled')
+    .filter((r) => r.status === "fulfilled")
     .flatMap((r) => r.value);
 
   logInfo(`Total de vagas encontradas: ${todas.length}`);
@@ -123,7 +130,10 @@ export const buscarVagas = async ({ query = '', tags = [], limit = 10 } = {}) =>
  */
 export const buscarVagaFonte = async (fonte, params = {}) => {
   const feed = FEEDS[fonte];
-  if (!feed) throw new Error(`Fonte desconhecida: ${fonte}. Disponíveis: ${Object.keys(FEEDS).join(', ')}`);
+  if (!feed)
+    throw new Error(
+      `Fonte desconhecida: ${fonte}. Disponíveis: ${Object.keys(FEEDS).join(", ")}`,
+    );
 
   const result = await httpGet(feed.url, buildParams(fonte, params));
   if (!result.ok) throw new Error(result.error);
@@ -134,23 +144,28 @@ export const buscarVagaFonte = async (fonte, params = {}) => {
 /**
  * Lista fontes disponíveis
  */
-export const getFontes = () => Object.entries(FEEDS).map(([key, f]) => ({ id: key, name: f.name, url: f.url }));
+export const getFontes = () =>
+  Object.entries(FEEDS).map(([key, f]) => ({
+    id: key,
+    name: f.name,
+    url: f.url,
+  }));
 
 // ── Helpers ──
 
 function buildParams(fonte, { query, tags, limit }) {
   switch (fonte) {
-    case 'jobicy':
+    case "jobicy":
       return {
         count: limit,
-        tag: tags.length ? tags.join(',') : undefined,
+        tag: tags.length ? tags.join(",") : undefined,
       };
-    case 'arbeitnow':
+    case "arbeitnow":
       return {};
-    case 'remotive':
+    case "remotive":
       return {
         limit,
-        tags: tags.length ? tags.join(',') : undefined,
+        tags: tags.length ? tags.join(",") : undefined,
       };
     default:
       return {};

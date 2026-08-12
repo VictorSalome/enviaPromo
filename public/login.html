@@ -802,7 +802,14 @@
           const errorMsg = document.getElementById("errorMessage");
           const passwordInput = document.getElementById("password");
 
-          if (!submitBtn || !btnText || !btnLoading || !errorMsg || !passwordInput) return;
+          if (
+            !submitBtn ||
+            !btnText ||
+            !btnLoading ||
+            !errorMsg ||
+            !passwordInput
+          )
+            return;
 
           // Reset error
           errorMsg.classList.remove("show");

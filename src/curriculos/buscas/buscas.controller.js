@@ -1,9 +1,17 @@
-import { buscarVagas, buscarVagaFonte, getFontes } from './feed.service.js';
-import { ranquearVagas } from './match.service.js';
-import { executarPipeline } from './autoApply.service.js';
-import { parsearLinkedInHTML, normalizarVagasLinkedIn } from './linkedin.service.js';
-import { iniciarScheduler, pararScheduler, executarBusca, getStatus } from './scheduler.service.js';
-import { logInfo, logError } from '../utils/logger.js';
+import { buscarVagas, buscarVagaFonte, getFontes } from "./feed.service.js";
+import { ranquearVagas } from "./match.service.js";
+import { executarPipeline } from "./autoApply.service.js";
+import {
+  parsearLinkedInHTML,
+  normalizarVagasLinkedIn,
+} from "./linkedin.service.js";
+import {
+  iniciarScheduler,
+  pararScheduler,
+  executarBusca,
+  getStatus,
+} from "./scheduler.service.js";
+import { logInfo, logError } from "../utils/logger.js";
 
 /**
  * GET /buscar-vagas
@@ -21,10 +29,12 @@ export const buscarVagasController = async (req, res) => {
   try {
     const { query, tags, limit } = req.body || {};
 
-    logInfo(`Busca recebida: query="${query || ''}" tags=${(tags || []).join(',')}`);
+    logInfo(
+      `Busca recebida: query="${query || ""}" tags=${(tags || []).join(",")}`,
+    );
 
     const vagas = await buscarVagas({
-      query: query || '',
+      query: query || "",
       tags: tags || [],
       limit: Math.min(limit || 10, 20),
     });
@@ -52,7 +62,7 @@ export const buscarPorFonteController = async (req, res) => {
     const { query, tags, limit } = req.body || {};
 
     const vagas = await buscarVagaFonte(fonte, {
-      query: query || '',
+      query: query || "",
       tags: tags || [],
       limit: Math.min(limit || 10, 20),
     });
@@ -79,10 +89,12 @@ export const autoApplyController = async (req, res) => {
   try {
     const { query, tags, minScore, limit, autoSend } = req.body || {};
 
-    logInfo(`Auto-apply iniciado: minScore=${minScore || 70} autoSend=${autoSend || false}`);
+    logInfo(
+      `Auto-apply iniciado: minScore=${minScore || 70} autoSend=${autoSend || false}`,
+    );
 
     const resultado = await executarPipeline({
-      query: query || '',
+      query: query || "",
       tags: tags || [],
       minScore: minScore || 70,
       limit: Math.min(limit || 10, 20),
@@ -129,7 +141,8 @@ export const schedulerRunNowController = async (req, res) => {
 export const linkedinParseController = (req, res) => {
   try {
     const { html } = req.body || {};
-    if (!html) return res.status(400).json({ ok: false, error: 'HTML obrigatório' });
+    if (!html)
+      return res.status(400).json({ ok: false, error: "HTML obrigatório" });
 
     const vagas = parsearLinkedInHTML(html);
     const normalizadas = normalizarVagasLinkedIn(vagas);

@@ -1,0 +1,413 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Configuração SMTP</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #08111f;
+        --card: #101b2f;
+        --muted: #93a3c7;
+        --text: #e7eeff;
+        --primary: #5c8dff;
+        --primary-strong: #3f73f2;
+        --ok: #14c38e;
+        --danger: #ff5d7a;
+        --border: rgba(166, 184, 220, 0.2);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family:
+          "Manrope",
+          -apple-system,
+          BlinkMacSystemFont,
+          sans-serif;
+        color: var(--text);
+        background:
+          radial-gradient(circle at 10% 20%, #143160 0%, transparent 45%),
+          radial-gradient(circle at 90% 80%, #1c2f57 0%, transparent 48%),
+          var(--bg);
+        min-height: 100vh;
+        padding: 28px 18px;
+      }
+
+      .shell {
+        max-width: 880px;
+        margin: 0 auto;
+      }
+
+      .head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 18px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(1.35rem, 2vw, 2rem);
+        letter-spacing: -0.02em;
+      }
+
+      .subtitle {
+        margin: 6px 0 0;
+        color: var(--muted);
+        font-size: 0.95rem;
+      }
+
+      .card {
+        background:
+          linear-gradient(160deg, rgba(255, 255, 255, 0.03), transparent),
+          var(--card);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        padding: 20px;
+        box-shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      .field {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .field.full {
+        grid-column: 1 / -1;
+      }
+
+      label {
+        font-size: 0.78rem;
+        color: #b7c6e7;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        font-weight: 700;
+      }
+
+      input,
+      select {
+        width: 100%;
+        border: 1px solid rgba(166, 184, 220, 0.35);
+        background: rgba(13, 23, 42, 0.8);
+        color: var(--text);
+        border-radius: 12px;
+        padding: 12px 13px;
+        font-size: 0.96rem;
+        outline: none;
+      }
+
+      input:focus,
+      select:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(92, 141, 255, 0.2);
+      }
+
+      .actions {
+        margin-top: 18px;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .btn {
+        border: 0;
+        border-radius: 12px;
+        padding: 12px 10px;
+        font-weight: 700;
+        cursor: pointer;
+        font-family: inherit;
+      }
+
+      .btn-primary {
+        background: linear-gradient(
+          135deg,
+          var(--primary),
+          var(--primary-strong)
+        );
+        color: white;
+      }
+
+      .btn-alt {
+        background: rgba(166, 184, 220, 0.14);
+        color: #d2dcf6;
+        border: 1px solid rgba(166, 184, 220, 0.35);
+      }
+
+      .status {
+        margin-top: 14px;
+        display: none;
+        border-radius: 12px;
+        padding: 12px 14px;
+        font-size: 0.92rem;
+        border: 1px solid transparent;
+      }
+
+      .status.ok {
+        display: block;
+        color: #b8f7e5;
+        background: rgba(20, 195, 142, 0.12);
+        border-color: rgba(20, 195, 142, 0.35);
+      }
+
+      .status.error {
+        display: block;
+        color: #ffd3dd;
+        background: rgba(255, 93, 122, 0.12);
+        border-color: rgba(255, 93, 122, 0.35);
+      }
+
+      .meta {
+        margin-top: 16px;
+        color: var(--muted);
+        font-size: 0.84rem;
+      }
+
+      .back {
+        background: transparent;
+        color: #cad7f4;
+        border: 1px solid rgba(202, 215, 244, 0.3);
+        padding: 10px 14px;
+        border-radius: 10px;
+        cursor: pointer;
+      }
+
+      @media (max-width: 720px) {
+        .grid,
+        .actions {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="shell">
+      <div class="head">
+        <div>
+          <h1>⚙️ Painel SMTP</h1>
+          <p class="subtitle">
+            Configure manualmente e sincronize o envio para o site e a extensão.
+          </p>
+        </div>
+        <button class="back" onclick="goBack()">← Voltar</button>
+      </div>
+
+      <section class="card">
+        <div class="grid">
+          <div class="field full">
+            <label for="smtp-host">SMTP_HOST</label>
+            <input id="smtp-host" placeholder="smtp.gmail.com" />
+          </div>
+
+          <div class="field">
+            <label for="smtp-port">SMTP_PORT</label>
+            <input
+              id="smtp-port"
+              type="number"
+              min="1"
+              max="65535"
+              placeholder="587"
+            />
+          </div>
+
+          <div class="field">
+            <label for="smtp-secure">SMTP_SECURE</label>
+            <select id="smtp-secure">
+              <option value="false">false (STARTTLS)</option>
+              <option value="true">true (SSL)</option>
+            </select>
+          </div>
+
+          <div class="field full">
+            <label for="smtp-user">SMTP_USER</label>
+            <input
+              id="smtp-user"
+              type="email"
+              placeholder="seuemail@gmail.com"
+            />
+          </div>
+
+          <div class="field full">
+            <label for="smtp-pass">SMTP_PASS</label>
+            <input
+              id="smtp-pass"
+              type="password"
+              placeholder="senha de app do Gmail"
+            />
+          </div>
+
+          <div class="field full">
+            <label for="email-from">EMAIL_FROM</label>
+            <input
+              id="email-from"
+              type="email"
+              placeholder="seuemail@gmail.com"
+            />
+          </div>
+        </div>
+
+        <div class="actions">
+          <button
+            id="saveBtn"
+            class="btn btn-primary"
+            onclick="saveSmtpConfig()"
+          >
+            💾 Salvar Configuração
+          </button>
+          <button id="testBtn" class="btn btn-alt" onclick="testSmtp()">
+            🔌 Testar SMTP
+          </button>
+          <button class="btn btn-alt" onclick="loadSmtpConfig()">
+            🔄 Recarregar
+          </button>
+        </div>
+
+        <div id="status" class="status"></div>
+
+        <p class="meta">
+          Observação: essa configuração é aplicada no backend em runtime. A
+          extensão usa o mesmo backend, então passa a usar o novo SMTP
+          automaticamente.
+        </p>
+      </section>
+    </main>
+
+    <script>
+      const els = {
+        host: document.getElementById("smtp-host"),
+        port: document.getElementById("smtp-port"),
+        secure: document.getElementById("smtp-secure"),
+        user: document.getElementById("smtp-user"),
+        pass: document.getElementById("smtp-pass"),
+        emailFrom: document.getElementById("email-from"),
+        status: document.getElementById("status"),
+        saveBtn: document.getElementById("saveBtn"),
+        testBtn: document.getElementById("testBtn"),
+      };
+
+      function setStatus(type, message) {
+        els.status.className = `status ${type}`;
+        els.status.textContent = message;
+      }
+
+      function goBack() {
+        window.location.href = "/envia-curriculo";
+      }
+
+      async function loadSmtpConfig() {
+        try {
+          const response = await fetch("/api/curriculo/config/smtp");
+          const data = await response.json();
+
+          if (!response.ok || !data.success) {
+            throw new Error(
+              data.error?.message || data.message || "Falha ao carregar",
+            );
+          }
+
+          const smtp = data.smtp || {};
+          els.host.value = smtp.host || "";
+          els.port.value = smtp.port || 587;
+          els.secure.value = String(Boolean(smtp.secure));
+          els.user.value = smtp.user || "";
+          els.pass.value = "";
+          els.emailFrom.value = smtp.emailFrom || smtp.user || "";
+
+          setStatus("ok", "Configuração atual carregada.");
+        } catch (error) {
+          setStatus(
+            "error",
+            error.message || "Erro ao carregar configuração SMTP.",
+          );
+        }
+      }
+
+      async function saveSmtpConfig() {
+        const payload = {
+          host: els.host.value.trim(),
+          port: Number(els.port.value || 587),
+          secure: els.secure.value === "true",
+          user: els.user.value.trim(),
+          pass: els.pass.value,
+          emailFrom: els.emailFrom.value.trim(),
+        };
+
+        els.saveBtn.disabled = true;
+        els.saveBtn.textContent = "Salvando...";
+
+        try {
+          const response = await fetch("/api/curriculo/config/smtp", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+
+          const data = await response.json();
+          if (!response.ok || !data.success) {
+            throw new Error(
+              data.error?.message || data.message || "Falha ao salvar",
+            );
+          }
+
+          els.pass.value = "";
+          setStatus(
+            "ok",
+            "Configuração salva. Agora o site e a extensão usam este SMTP.",
+          );
+        } catch (error) {
+          setStatus(
+            "error",
+            error.message || "Erro ao salvar configuração SMTP.",
+          );
+        } finally {
+          els.saveBtn.disabled = false;
+          els.saveBtn.textContent = "💾 Salvar Configuração";
+        }
+      }
+
+      async function testSmtp() {
+        els.testBtn.disabled = true;
+        els.testBtn.textContent = "Testando...";
+
+        try {
+          const response = await fetch("/api/curriculo/smtp-test", {
+            method: "GET",
+          });
+          const data = await response.json();
+
+          if (!response.ok || !data.success) {
+            throw new Error(data.message || "Falha no teste SMTP");
+          }
+
+          const detail = data.smtp?.usedFallback
+            ? `Conectado via fallback ${data.smtp.testedPort} SSL`
+            : `Conectado em ${data.smtp?.testedPort || data.smtp?.port}`;
+
+          setStatus("ok", `${data.message}. ${detail}.`);
+        } catch (error) {
+          setStatus("error", error.message || "Erro ao testar SMTP.");
+        } finally {
+          els.testBtn.disabled = false;
+          els.testBtn.textContent = "🔌 Testar SMTP";
+        }
+      }
+
+      document.addEventListener("DOMContentLoaded", loadSmtpConfig);
+    </script>
+  </body>
+</html>

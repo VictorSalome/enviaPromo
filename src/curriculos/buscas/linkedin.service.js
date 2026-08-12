@@ -1,4 +1,4 @@
-import { logInfo, logError } from '../utils/logger.js';
+import { logInfo, logError } from "../utils/logger.js";
 
 /**
  * Parseia HTML do LinkedIn para extrair vagas com email
@@ -8,12 +8,13 @@ import { logInfo, logError } from '../utils/logger.js';
  * @returns {Object[]} Vagas extraídas
  */
 export const parsearLinkedInHTML = (html) => {
-  logInfo('Parseando HTML do LinkedIn...');
+  logInfo("Parseando HTML do LinkedIn...");
 
   const vagas = [];
 
   // Extrair blocos de post (cada vaga é um post)
-  const postRegex = /<span[^>]*data-testid="expandable-text-box"[^>]*>([\s\S]*?)<\/span>/gi;
+  const postRegex =
+    /<span[^>]*data-testid="expandable-text-box"[^>]*>([\s\S]*?)<\/span>/gi;
   let match;
 
   while ((match = postRegex.exec(html)) !== null) {
@@ -30,14 +31,14 @@ export const parsearLinkedInHTML = (html) => {
 
     if (emails.length > 0 || titulos.length > 0) {
       vagas.push({
-        titulo: titulos[0] || 'Vaga do LinkedIn',
-        empresa: '',
+        titulo: titulos[0] || "Vaga do LinkedIn",
+        empresa: "",
         descricao: limparHTML(html.substring(0, 500)),
         emails,
         links,
-        localizacao: '',
-        modalidade: '',
-        fonte: 'linkedin',
+        localizacao: "",
+        modalidade: "",
+        fonte: "linkedin",
       });
     }
   }
@@ -57,22 +58,31 @@ function extrairVagaDoConteudo(html) {
   if (emails.length === 0) return null;
 
   // Extrair título da vaga
-  const tituloMatch = texto.match(/(?:TEMOS VAGA|VAGA|Vaga)[:\s]*(.*?)(?:\n|<br|$)/i);
-  const titulo = tituloMatch ? tituloMatch[1].trim() : extrairTituloGenerico(texto);
+  const tituloMatch = texto.match(
+    /(?:TEMOS VAGA|VAGA|Vaga)[:\s]*(.*?)(?:\n|<br|$)/i,
+  );
+  const titulo = tituloMatch
+    ? tituloMatch[1].trim()
+    : extrairTituloGenerico(texto);
 
   // Extrair empresa
   const empresaMatch = texto.match(/empresa\s+(?:de\s+)?(.*?)(?:\n|\.|$)/i);
-  const empresa = empresaMatch ? empresaMatch[1].trim() : '';
+  const empresa = empresaMatch ? empresaMatch[1].trim() : "";
 
   // Extrair localização
   const localMatch = texto.match(/📍\s*(.*?)(?:\n|<br|$)/);
-  const localizacao = localMatch ? localMatch[1].trim() : '';
+  const localizacao = localMatch ? localMatch[1].trim() : "";
 
   // Extrair modalidade
-  let modalidade = '';
-  if (texto.toLowerCase().includes('remoto')) modalidade = 'Remoto';
-  else if (texto.toLowerCase().includes('híbrido') || texto.toLowerCase().includes('hibrido')) modalidade = 'Híbrido';
-  else if (texto.toLowerCase().includes('presencial')) modalidade = 'Presencial';
+  let modalidade = "";
+  if (texto.toLowerCase().includes("remoto")) modalidade = "Remoto";
+  else if (
+    texto.toLowerCase().includes("híbrido") ||
+    texto.toLowerCase().includes("hibrido")
+  )
+    modalidade = "Híbrido";
+  else if (texto.toLowerCase().includes("presencial"))
+    modalidade = "Presencial";
 
   // Extrair links
   const links = extrairLinksVagas(html);
@@ -85,23 +95,28 @@ function extrairVagaDoConteudo(html) {
     links,
     localizacao,
     modalidade,
-    fonte: 'linkedin',
+    fonte: "linkedin",
   };
 }
 
 function extrairTituloGenerico(texto) {
-  const match = texto.match(/(?:Desenvolvedor|Engineer|Developer|Analista|Programador)\s+[\w\s]+/i);
-  return match ? match[0].trim().substring(0, 80) : 'Vaga';
+  const match = texto.match(
+    /(?:Desenvolvedor|Engineer|Developer|Analista|Programador)\s+[\w\s]+/i,
+  );
+  return match ? match[0].trim().substring(0, 80) : "Vaga";
 }
 
 function extrairEmails(html) {
   const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
-  const emails = [...new Set((html.match(emailRegex) || []))];
-  return emails.filter((e) => !e.endsWith('linkedin.com') && !e.endsWith('sentry.io'));
+  const emails = [...new Set(html.match(emailRegex) || [])];
+  return emails.filter(
+    (e) => !e.endsWith("linkedin.com") && !e.endsWith("sentry.io"),
+  );
 }
 
 function extrairLinksVagas(html) {
-  const linkRegex = /href="(https?:\/\/[^"]*(?:linkedin\.com|lnkd\.in|jobs?)[^"]*)"/gi;
+  const linkRegex =
+    /href="(https?:\/\/[^"]*(?:linkedin\.com|lnkd\.in|jobs?)[^"]*)"/gi;
   const links = [];
   let m;
   while ((m = linkRegex.exec(html)) !== null) {
@@ -112,7 +127,8 @@ function extrairLinksVagas(html) {
 
 function extrairTitulosVagas(html) {
   const titulos = [];
-  const regex = /(?:Desenvolvedor|Engineer|Developer|Analista|Programador|Full Stack|Frontend|Backend|React|Node|Java|Python|\.NET|C#)[\w\s.,()-]{5,60}/gi;
+  const regex =
+    /(?:Desenvolvedor|Engineer|Developer|Analista|Programador|Full Stack|Frontend|Backend|React|Node|Java|Python|\.NET|C#)[\w\s.,()-]{5,60}/gi;
   let m;
   while ((m = regex.exec(html)) !== null) {
     titulos.push(m[0].trim());
@@ -122,12 +138,12 @@ function extrairTitulosVagas(html) {
 
 function limparHTML(html) {
   return html
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/&nbsp;/g, ' ')
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/\s+/g, ' ')
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/\s+/g, " ")
     .trim();
 }
 
@@ -136,17 +152,17 @@ function limparHTML(html) {
  */
 export const normalizarVagasLinkedIn = (vagas) => {
   return vagas.map((v) => ({
-    source: 'linkedin',
+    source: "linkedin",
     externalId: `linkedin-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
     title: v.titulo,
     company: v.empresa,
     description: v.descricao,
-    url: v.links[0] || '',
+    url: v.links[0] || "",
     location: v.localizacao,
-    salary: '',
+    salary: "",
     tags: [],
     postedAt: new Date().toISOString(),
-    type: v.modalidade || '',
+    type: v.modalidade || "",
     _emails: v.emails,
   }));
 };

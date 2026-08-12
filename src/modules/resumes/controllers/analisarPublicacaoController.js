@@ -1,12 +1,15 @@
-import { extrairDadosVaga } from "./vagaExtractor.service.js";
-import { personalizarCurriculo } from "./curriculoPersonalizador.service.js";
-import { gerarPdfCurriculo } from "../pdf/pdfGenerator.service.js";
+import { extrairDadosVaga } from "../services/vagaExtractorService.js";
+import { personalizarCurriculo } from "../services/curriculoPersonalizadorService.js";
+import { gerarPdfCurriculo } from "../services/pdfGeneratorService.js";
 import {
   enviarCurriculo,
   validarConfiguracaoEmail,
   testarConexaoSMTP,
-} from "../email/email.service.js";
-import { getSmtpConfig, updateSmtpConfig } from "../smtp/smtpConfig.service.js";
+} from "../services/emailService.js";
+import {
+  getSmtpConfig,
+  updateSmtpConfig,
+} from "../services/smtpConfigService.js";
 import {
   validateVagaText,
   validateExtractedJobData,

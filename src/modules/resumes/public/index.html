@@ -1,0 +1,1302 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sistema de Currículo Automatizado</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      :root {
+        --primary: #6366f1;
+        --primary-dark: #4f46e5;
+        --primary-light: #818cf8;
+        --secondary: #0ea5e9;
+        --success: #10b981;
+        --success-dark: #059669;
+        --danger: #ef4444;
+        --warning: #f59e0b;
+        --bg: #f8fafc;
+        --surface: #ffffff;
+        --text: #0f172a;
+        --text-secondary: #64748b;
+        --border: #e2e8f0;
+        --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+        --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+        --shadow-md:
+          0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        --shadow-lg:
+          0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        --shadow-xl:
+          0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+      }
+
+      body {
+        font-family:
+          "Inter",
+          -apple-system,
+          BlinkMacSystemFont,
+          sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        line-height: 1.6;
+        min-height: 100vh;
+      }
+
+      /* Header */
+      .header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 40px 20px;
+        text-align: center;
+        color: white;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .header::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+      }
+
+      .header-content {
+        position: relative;
+        z-index: 1;
+      }
+
+      .header h1 {
+        font-size: 32px;
+        font-weight: 700;
+        margin-bottom: 8px;
+        letter-spacing: -0.5px;
+      }
+
+      .header p {
+        font-size: 16px;
+        opacity: 0.9;
+        font-weight: 300;
+      }
+
+      /* Steps indicator */
+      .steps {
+        display: flex;
+        justify-content: center;
+        gap: 0;
+        margin-top: 32px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .step {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 24px;
+        position: relative;
+      }
+
+      .step:not(:last-child)::after {
+        content: "";
+        position: absolute;
+        right: -20px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 40px;
+        height: 2px;
+        background: rgba(255, 255, 255, 0.3);
+      }
+
+      .step-number {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 14px;
+        transition: all 0.3s;
+      }
+
+      .step.active .step-number {
+        background: white;
+        color: #667eea;
+      }
+
+      .step.completed .step-number {
+        background: #10b981;
+        color: white;
+      }
+
+      .step-label {
+        font-size: 14px;
+        font-weight: 500;
+        opacity: 0.7;
+        transition: opacity 0.3s;
+      }
+
+      .step.active .step-label,
+      .step.completed .step-label {
+        opacity: 1;
+      }
+
+      /* Main container */
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 30px 20px;
+      }
+
+      /* Cards */
+      .card {
+        background: var(--surface);
+        border-radius: 16px;
+        box-shadow: var(--shadow);
+        border: 1px solid var(--border);
+        overflow: hidden;
+      }
+
+      .card-header {
+        padding: 20px 24px;
+        border-bottom: 1px solid var(--border);
+        background: #fafbfc;
+      }
+
+      .card-header h2 {
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--text);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .card-body {
+        padding: 24px;
+      }
+
+      /* Grid layout */
+      .main-grid {
+        display: grid;
+        grid-template-columns: 420px 1fr;
+        gap: 24px;
+        align-items: start;
+      }
+
+      @media (max-width: 1100px) {
+        .main-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* Form elements */
+      textarea {
+        width: 100%;
+        height: 320px;
+        padding: 16px;
+        border: 2px solid var(--border);
+        border-radius: 10px;
+        font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+        font-size: 13px;
+        line-height: 1.6;
+        resize: vertical;
+        transition: all 0.2s;
+        background: #fafbfc;
+      }
+
+      textarea:focus {
+        outline: none;
+        border-color: var(--primary);
+        background: white;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+      }
+
+      textarea::placeholder {
+        color: #94a3b8;
+      }
+
+      /* Buttons */
+      .btn {
+        padding: 14px 28px;
+        font-size: 14px;
+        font-weight: 600;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        width: 100%;
+      }
+
+      .btn-primary:hover:not(:disabled) {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+      }
+
+      .btn-primary:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+
+      .btn-success {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+      }
+
+      .btn-success:hover:not(:disabled) {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+      }
+
+      .btn-success:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+
+      .btn-secondary {
+        background: #f1f5f9;
+        color: var(--text-secondary);
+      }
+
+      .btn-secondary:hover {
+        background: #e2e8f0;
+      }
+
+      .btn-danger {
+        background: #fef2f2;
+        color: var(--danger);
+      }
+
+      .btn-danger:hover {
+        background: #fee2e2;
+      }
+
+      .btn-group {
+        display: flex;
+        gap: 12px;
+        margin-top: 16px;
+      }
+
+      .btn-group .btn {
+        flex: 1;
+      }
+
+      /* Messages */
+      .message {
+        padding: 14px 16px;
+        border-radius: 10px;
+        margin-top: 16px;
+        display: none;
+        font-size: 14px;
+        font-weight: 500;
+        animation: slideIn 0.3s ease;
+      }
+
+      @keyframes slideIn {
+        from {
+          opacity: 0;
+          transform: translateY(-10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .message.error {
+        background: #fef2f2;
+        color: #991b1b;
+        border: 1px solid #fecaca;
+      }
+
+      .message.success {
+        background: #f0fdf4;
+        color: #166534;
+        border: 1px solid #bbf7d0;
+      }
+
+      .message.info {
+        background: #eff6ff;
+        color: #1e40af;
+        border: 1px solid #bfdbfe;
+      }
+
+      /* Loading */
+      .loading {
+        text-align: center;
+        padding: 40px 20px;
+        display: none;
+      }
+
+      .loading-spinner {
+        width: 48px;
+        height: 48px;
+        border: 4px solid #e2e8f0;
+        border-top-color: var(--primary);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        margin: 0 auto 16px;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .loading-text {
+        color: var(--text-secondary);
+        font-size: 14px;
+      }
+
+      /* Preview section */
+      .preview-section {
+        display: none;
+      }
+
+      .preview-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .preview-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--text);
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .badge-success {
+        background: #f0fdf4;
+        color: #166534;
+      }
+
+      .badge-warning {
+        background: #fffbeb;
+        color: #92400e;
+      }
+
+      .badge-info {
+        background: #eff6ff;
+        color: #1e40af;
+      }
+
+      /* PDF Viewer */
+      .pdf-viewer {
+        width: 100%;
+        height: 700px;
+        border: 2px solid var(--border);
+        border-radius: 12px;
+        background: #525659;
+      }
+
+      /* Action panel */
+      .action-panel {
+        margin-top: 20px;
+        padding: 20px;
+        background: #fafbfc;
+        border-radius: 12px;
+        border: 2px solid var(--border);
+        display: none;
+      }
+
+      .action-panel.show {
+        display: block;
+        animation: slideIn 0.3s ease;
+      }
+
+      .action-panel h4 {
+        font-size: 15px;
+        font-weight: 600;
+        margin-bottom: 12px;
+        color: var(--text);
+      }
+
+      .action-panel p {
+        font-size: 13px;
+        color: var(--text-secondary);
+        margin-bottom: 16px;
+      }
+
+      .manual-email-block {
+        margin-bottom: 16px;
+        padding: 14px;
+        border: 1px solid #fde68a;
+        border-radius: 10px;
+        background: #fffbeb;
+      }
+
+      .manual-email-block label {
+        display: block;
+        font-size: 12px;
+        font-weight: 600;
+        color: #92400e;
+        margin-bottom: 8px;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+      }
+
+      .manual-email-input {
+        width: 100%;
+        border: 1px solid #f59e0b;
+        border-radius: 8px;
+        padding: 10px 12px;
+        font-size: 14px;
+        color: var(--text);
+        background: #ffffff;
+      }
+
+      .manual-email-input:focus {
+        outline: none;
+        border-color: #d97706;
+        box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15);
+      }
+
+      .manual-email-input.manual-valid {
+        border-color: #10b981;
+        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+      }
+
+      .manual-email-input.manual-invalid {
+        border-color: #ef4444;
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12);
+      }
+
+      .manual-email-hint {
+        margin-top: 8px;
+        font-size: 12px;
+        color: #92400e;
+      }
+
+      .manual-email-hint.valid {
+        color: #166534;
+      }
+
+      .manual-email-hint.invalid {
+        color: #991b1b;
+      }
+
+      .action-buttons {
+        display: flex;
+        gap: 12px;
+      }
+
+      .action-buttons .btn {
+        flex: 1;
+      }
+
+      /* Results grid */
+      .results-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+        margin-top: 16px;
+      }
+
+      .result-item {
+        padding: 14px;
+        background: #fafbfc;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+      }
+
+      .result-item strong {
+        display: block;
+        font-size: 11px;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 4px;
+      }
+
+      .result-item span {
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--text);
+      }
+
+      /* Skills tags */
+      .skills-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 12px;
+      }
+
+      .skill-tag {
+        padding: 4px 10px;
+        background: #eff6ff;
+        color: #1e40af;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 500;
+      }
+
+      /* Empty state */
+      .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: var(--text-secondary);
+      }
+
+      .empty-state svg {
+        width: 64px;
+        height: 64px;
+        margin-bottom: 16px;
+        opacity: 0.4;
+      }
+
+      .empty-state h3 {
+        font-size: 16px;
+        font-weight: 500;
+        margin-bottom: 8px;
+      }
+
+      .empty-state p {
+        font-size: 14px;
+      }
+
+      /* Success animation */
+      .success-animation {
+        text-align: center;
+        padding: 20px;
+      }
+
+      .success-checkmark {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+        animation: scaleIn 0.5s ease;
+      }
+
+      @keyframes scaleIn {
+        from {
+          transform: scale(0);
+        }
+        to {
+          transform: scale(1);
+        }
+      }
+
+      .success-checkmark svg {
+        width: 40px;
+        height: 40px;
+        color: white;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <div class="header-content">
+        <h1>📄 Sistema de Currículo Automatizado</h1>
+        <p>Gere currículos personalizados e envie diretamente por e-mail</p>
+
+        <div class="steps">
+          <div class="step active" id="step1">
+            <div class="step-number">1</div>
+            <span class="step-label">Gerar Currículo</span>
+          </div>
+          <div class="step" id="step2">
+            <div class="step-number">2</div>
+            <span class="step-label">Revisar Preview</span>
+          </div>
+          <div class="step" id="step3">
+            <div class="step-number">3</div>
+            <span class="step-label">Enviar E-mail</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+      <div class="main-grid">
+        <!-- Left panel: Form & Results -->
+        <div>
+          <div class="card" id="formCard">
+            <div class="card-header">
+              <h2>📝 Texto da Vaga</h2>
+            </div>
+            <div class="card-body">
+              <form id="vagaForm">
+                <textarea
+                  id="vagaText"
+                  placeholder="Cole aqui o texto completo da vaga de emprego...
+
+Exemplo:
+Vaga: Desenvolvedor React Native
+Empresa: MobileTech
+E-mail: rh@mobiletech.com.br
+Localização: Remoto
+Nível: Pleno
+
+Responsabilidades:
+- Desenvolver apps mobile com React Native
+- Implementar integrações com APIs REST
+- Trabalhar com automação de processos
+
+Requisitos:
+- Experiência com React Native e TypeScript
+- Conhecimento em Node.js
+- Familiaridade com CI/CD"
+                  required
+                ></textarea>
+                <button type="submit" class="btn btn-primary" id="submitBtn">
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path
+                      d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+                    ></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                    <polyline points="10 9 9 9 8 9"></polyline>
+                  </svg>
+                  Gerar Currículo
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  id="smtpTestBtn"
+                  style="width: 100%; margin-top: 10px"
+                  onclick="testSmtpConnection()"
+                >
+                  🔌 Testar SMTP
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  style="width: 100%; margin-top: 10px"
+                  onclick="goToSmtpConfig()"
+                >
+                  ⚙️ Configurar SMTP
+                </button>
+              </form>
+
+              <div class="loading" id="loading">
+                <div class="loading-spinner"></div>
+                <div class="loading-text">
+                  Analisando vaga e gerando currículo...
+                </div>
+              </div>
+
+              <div class="message error" id="errorMessage"></div>
+              <div class="message success" id="successMessage"></div>
+            </div>
+          </div>
+
+          <!-- Results panel (hidden initially) -->
+          <div
+            class="card"
+            id="resultsCard"
+            style="display: none; margin-top: 24px"
+          >
+            <div class="card-header">
+              <h2>📊 Resultado da Análise</h2>
+            </div>
+            <div class="card-body" id="resultsContent"></div>
+          </div>
+        </div>
+
+        <!-- Right panel: Preview & Actions -->
+        <div>
+          <div class="card">
+            <div class="card-header">
+              <h2>👁️ Pré-visualização</h2>
+            </div>
+            <div class="card-body">
+              <div class="empty-state" id="emptyState">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                >
+                  <path
+                    d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+                  ></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                </svg>
+                <h3>Nenhum currículo gerado</h3>
+                <p>
+                  Cole uma vaga à esquerda e clique em "Gerar Currículo" para
+                  começar.
+                </p>
+              </div>
+
+              <div class="preview-section" id="previewSection">
+                <div class="preview-header">
+                  <div>
+                    <div class="preview-title" id="previewTitle">
+                      Currículo Gerado
+                    </div>
+                    <div
+                      style="
+                        font-size: 13px;
+                        color: var(--text-secondary);
+                        margin-top: 4px;
+                      "
+                      id="previewSubtitle"
+                    ></div>
+                  </div>
+                  <span class="badge badge-success" id="relevanceBadge"></span>
+                </div>
+
+                <iframe
+                  id="pdfViewer"
+                  class="pdf-viewer"
+                  src=""
+                  frameborder="0"
+                ></iframe>
+
+                <!-- Action panel: Approve or Regenerate -->
+                <div class="action-panel show" id="actionPanel">
+                  <h4>📋 O que deseja fazer?</h4>
+                  <p>
+                    Revise o currículo acima. Se estiver satisfeito, autorize o
+                    envio por e-mail.
+                  </p>
+                  <div class="action-buttons">
+                    <button class="btn btn-secondary" onclick="regenerate()">
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                      >
+                        <polyline points="23 4 23 10 17 10"></polyline>
+                        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                      </svg>
+                      Gerar Novamente
+                    </button>
+                    <button class="btn btn-secondary" onclick="downloadPDF()">
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                      >
+                        <path
+                          d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+                        ></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                      </svg>
+                      Baixar PDF
+                    </button>
+                    <button
+                      class="btn btn-success"
+                      id="sendBtn"
+                      onclick="sendEmail()"
+                    >
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                      >
+                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                      </svg>
+                      Aprovar e Enviar
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Success state (after sending) -->
+              <div class="preview-section" id="successSection">
+                <div class="success-animation">
+                  <div class="success-checkmark">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="3"
+                    >
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                  </div>
+                  <h3 style="font-size: 20px; margin-bottom: 8px">
+                    Currículo Enviado!
+                  </h3>
+                  <p
+                    style="color: var(--text-secondary); font-size: 14px"
+                    id="sentDetails"
+                  ></p>
+                </div>
+                <div class="action-buttons" style="margin-top: 20px">
+                  <button class="btn btn-secondary" onclick="resetAll()">
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <polyline points="23 4 23 10 17 10"></polyline>
+                      <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                    </svg>
+                    Nova Vaga
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // State
+      let currentPdf = null;
+      let currentEmail = null;
+      let currentVaga = null;
+
+      // Form submission
+      document
+        .getElementById("vagaForm")
+        .addEventListener("submit", async function (e) {
+          e.preventDefault();
+
+          const vagaText = document.getElementById("vagaText").value.trim();
+          if (!vagaText) {
+            showMessage("error", "Por favor, insira o texto da vaga.");
+            return;
+          }
+
+          setLoading(true);
+          hideMessages();
+
+          try {
+            const response = await fetch("/api/curriculo/gerar-curriculo", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ vaga: vagaText }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+              throw new Error(data.error?.message || "Erro ao gerar currículo");
+            }
+
+            // Store state
+            currentPdf = data.curriculoGerado;
+            currentEmail = data.emailDestino;
+            currentVaga = data.vaga;
+
+            // Update steps
+            updateSteps(2);
+
+            // Show preview
+            showPreview(data);
+          } catch (error) {
+            showMessage("error", error.message);
+          } finally {
+            setLoading(false);
+          }
+        });
+
+      // Send email
+      async function sendEmail() {
+        if (!currentPdf) {
+          showMessage("error", "Gere o currículo antes de enviar.");
+          return;
+        }
+
+        if (!currentEmail) {
+          const emailInformado = getManualDestinationEmail();
+          if (!emailInformado) {
+            return;
+          }
+
+          currentEmail = emailInformado;
+        }
+
+        const sendBtn = document.getElementById("sendBtn");
+        sendBtn.disabled = true;
+        sendBtn.innerHTML =
+          '<div class="loading-spinner" style="width: 16px; height: 16px; border-width: 2px; margin: 0;"></div> Enviando...';
+
+        try {
+          const response = await fetch("/api/curriculo/enviar-curriculo", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              nomeArquivo: currentPdf,
+              emailDestino: currentEmail,
+              vagaTitulo: currentVaga,
+            }),
+          });
+
+          const data = await response.json();
+
+          if (!response.ok) {
+            throw new Error(data.error?.message || "Erro ao enviar e-mail");
+          }
+
+          // Update steps
+          updateSteps(3);
+
+          // Show success
+          showSuccess(data);
+        } catch (error) {
+          showMessage("error", error.message);
+          sendBtn.disabled = false;
+          sendBtn.innerHTML =
+            '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg> Aprovar e Enviar';
+        }
+      }
+
+      async function testSmtpConnection() {
+        const smtpTestBtn = document.getElementById("smtpTestBtn");
+        const originalHtml = smtpTestBtn.innerHTML;
+
+        smtpTestBtn.disabled = true;
+        smtpTestBtn.innerHTML =
+          '<div class="loading-spinner" style="width: 16px; height: 16px; border-width: 2px; margin: 0;"></div> Testando SMTP...';
+
+        hideMessages();
+
+        try {
+          const response = await fetch("/api/curriculo/smtp-test", {
+            method: "GET",
+          });
+          const data = await response.json();
+
+          if (response.ok && data.success) {
+            showMessage(
+              "success",
+              `SMTP conectado com sucesso (${data.smtp?.host}:${data.smtp?.port}).`,
+            );
+          } else {
+            showMessage(
+              "error",
+              data.message ||
+                data.error?.message ||
+                "Falha ao conectar no SMTP.",
+            );
+          }
+        } catch (error) {
+          showMessage("error", error.message || "Erro ao testar SMTP.");
+        } finally {
+          smtpTestBtn.disabled = false;
+          smtpTestBtn.innerHTML = originalHtml;
+        }
+      }
+
+      function goToSmtpConfig() {
+        window.location.href = "/envia-curriculo/smtp-config";
+      }
+
+      // UI helpers
+      function showPreview(data) {
+        document.getElementById("emptyState").style.display = "none";
+        document.getElementById("previewSection").style.display = "block";
+        document.getElementById("successSection").style.display = "none";
+        document.getElementById("actionPanel").style.display = "block";
+
+        // PDF viewer
+        document.getElementById("pdfViewer").src =
+          data.previewUrl || `/temp/${data.curriculoGerado}`;
+        document.getElementById("previewTitle").textContent =
+          `Vaga: ${data.vaga}`;
+        document.getElementById("previewSubtitle").textContent =
+          `Empresa: ${data.empresa || "Não informada"} • ${data.emailDestino || "E-mail não identificado (será solicitado no envio)"}`;
+        document.getElementById("relevanceBadge").textContent =
+          `⭐ ${data.detalhes.relevancia}`;
+
+        const manualEmailBlock = data.emailDestino
+          ? ""
+          : `
+            <div class="manual-email-block">
+              <label for="manualEmailInput">E-mail de destino (obrigatório para envio)</label>
+              <input
+                id="manualEmailInput"
+                class="manual-email-input"
+                type="email"
+                autocomplete="email"
+                placeholder="exemplo@empresa.com"
+              />
+              <div id="manualEmailHint" class="manual-email-hint">
+                Informe um e-mail válido para continuar.
+              </div>
+            </div>
+          `;
+
+        document.getElementById("actionPanel").innerHTML = `
+          <h4>📋 O que deseja fazer?</h4>
+          <p>Revise o currículo acima. Se estiver satisfeito, autorize o envio por e-mail.</p>
+          ${manualEmailBlock}
+          <div class="action-buttons">
+            <button class="btn btn-secondary" onclick="regenerate()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="23 4 23 10 17 10"></polyline>
+                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+              </svg>
+              Gerar Novamente
+            </button>
+            <button class="btn btn-secondary" onclick="downloadPDF()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              Baixar PDF
+            </button>
+            <button class="btn btn-success" id="sendBtn" onclick="sendEmail()" ${
+              data.emailDestino ? "" : "disabled"
+            }>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="22" y1="2" x2="11" y2="13"></line>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+              </svg>
+              Aprovar e Enviar
+            </button>
+          </div>
+        `;
+
+        bindManualEmailInputValidation();
+
+        // Results
+        const resultsContent = document.getElementById("resultsContent");
+        resultsContent.innerHTML = `
+                <div class="results-grid">
+                    <div class="result-item">
+                        <strong>Vaga</strong>
+                        <span>${data.vaga}</span>
+                    </div>
+                    <div class="result-item">
+                        <strong>E-mail Destino</strong>
+                      <span>${data.emailDestino || "Não identificado"}</span>
+                    </div>
+                    <div class="result-item">
+                        <strong>Relevância</strong>
+                        <span style="color: var(--success); font-weight: 600;">${data.detalhes.relevancia}</span>
+                    </div>
+                    <div class="result-item">
+                        <strong>Tempo</strong>
+                        <span>${data.detalhes.tempoProcessamento}</span>
+                    </div>
+                </div>
+                <div style="margin-top: 16px;">
+                    <strong style="font-size: 12px; color: var(--text-secondary); text-transform: uppercase;">Habilidades Encontradas</strong>
+                    <div class="skills-tags">
+                        ${data.detalhes.habilidadesMatch.map((skill) => `<span class="skill-tag">${skill}</span>`).join("")}
+                    </div>
+                </div>
+            `;
+        document.getElementById("resultsCard").style.display = "block";
+      }
+
+      function showSuccess(data) {
+        document.getElementById("previewSection").style.display = "none";
+        document.getElementById("successSection").style.display = "block";
+        document.getElementById("sentDetails").textContent =
+          `E-mail enviado para ${data.email.destino} • ID: ${data.email.messageId}`;
+      }
+
+      function regenerate() {
+        document.getElementById("vagaText").focus();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+
+      function downloadPDF() {
+        if (currentPdf) {
+          const a = document.createElement("a");
+          a.href = `/temp/${currentPdf}`;
+          a.download = currentPdf;
+          a.click();
+        }
+      }
+
+      function resetAll() {
+        document.getElementById("vagaText").value = "";
+        document.getElementById("resultsCard").style.display = "none";
+        document.getElementById("previewSection").style.display = "none";
+        document.getElementById("successSection").style.display = "none";
+        document.getElementById("emptyState").style.display = "block";
+        document.getElementById("pdfViewer").src = "";
+        currentPdf = null;
+        currentEmail = null;
+        currentVaga = null;
+        updateSteps(1);
+      }
+
+      function getManualDestinationEmail() {
+        const input = document.getElementById("manualEmailInput");
+        if (!input) {
+          showMessage(
+            "error",
+            "Não encontramos e-mail na vaga e o campo de e-mail não está disponível.",
+          );
+          return null;
+        }
+
+        const emailNormalizado = input.value.trim();
+        if (!emailNormalizado) {
+          updateManualEmailInputState(input, "empty");
+          showMessage("error", "Informe o e-mail de destino para continuar.");
+          input.focus();
+          return null;
+        }
+
+        if (!isValidEmail(emailNormalizado)) {
+          updateManualEmailInputState(input, "invalid");
+          showMessage("error", "E-mail informado é inválido.");
+          input.focus();
+          return null;
+        }
+
+        updateManualEmailInputState(input, "valid");
+
+        return emailNormalizado;
+      }
+
+      function isValidEmail(email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
+      }
+
+      function updateManualEmailInputState(input, state) {
+        const hint = document.getElementById("manualEmailHint");
+        if (!input || !hint) return;
+
+        input.classList.remove("manual-valid", "manual-invalid");
+        hint.classList.remove("valid", "invalid");
+        setWebSendButtonEnabled(false);
+
+        if (state === "valid") {
+          input.classList.add("manual-valid");
+          hint.classList.add("valid");
+          hint.textContent = "E-mail válido. Pronto para enviar.";
+          setWebSendButtonEnabled(true);
+          return;
+        }
+
+        if (state === "invalid") {
+          input.classList.add("manual-invalid");
+          hint.classList.add("invalid");
+          hint.textContent = "E-mail inválido. Exemplo: nome@empresa.com";
+          return;
+        }
+
+        hint.textContent = "Informe um e-mail válido para continuar.";
+      }
+
+      function bindManualEmailInputValidation() {
+        const input = document.getElementById("manualEmailInput");
+        if (!input) {
+          setWebSendButtonEnabled(true);
+          return;
+        }
+
+        updateManualEmailInputState(input, "empty");
+        input.addEventListener("input", () => {
+          const valor = input.value.trim();
+          if (!valor) {
+            updateManualEmailInputState(input, "empty");
+            return;
+          }
+
+          updateManualEmailInputState(
+            input,
+            isValidEmail(valor) ? "valid" : "invalid",
+          );
+        });
+      }
+
+      function setWebSendButtonEnabled(enabled) {
+        const sendBtn = document.getElementById("sendBtn");
+        if (!sendBtn) return;
+        sendBtn.disabled = !enabled;
+      }
+
+      function updateSteps(step) {
+        for (let i = 1; i <= 3; i++) {
+          const el = document.getElementById(`step${i}`);
+          el.classList.remove("active", "completed");
+          if (i < step) el.classList.add("completed");
+          else if (i === step) el.classList.add("active");
+        }
+      }
+
+      function setLoading(isLoading) {
+        document.getElementById("loading").style.display = isLoading
+          ? "block"
+          : "none";
+        document.getElementById("submitBtn").disabled = isLoading;
+      }
+
+      function showMessage(type, message) {
+        const el = document.getElementById(
+          type === "error" ? "errorMessage" : "successMessage",
+        );
+        el.textContent = message;
+        el.style.display = "block";
+      }
+
+      function hideMessages() {
+        document.getElementById("errorMessage").style.display = "none";
+        document.getElementById("successMessage").style.display = "none";
+      }
+
+      // Auto-focus
+      document.addEventListener("DOMContentLoaded", () => {
+        document.getElementById("vagaText").focus();
+      });
+    </script>
+  </body>
+</html>

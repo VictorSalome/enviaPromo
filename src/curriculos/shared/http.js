@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios from "axios";
 
 /**
  * Instância HTTP compartilhada para chamadas externas
@@ -7,8 +7,8 @@ import axios from 'axios';
 const http = axios.create({
   timeout: 15000,
   headers: {
-    'Accept': 'application/json',
-    'User-Agent': 'CurriculosBot/1.0',
+    Accept: "application/json",
+    "User-Agent": "CurriculosBot/1.0",
   },
 });
 
@@ -24,7 +24,7 @@ http.interceptors.response.use(
 
     await new Promise((r) => setTimeout(r, delay));
     return http(config);
-  }
+  },
 );
 
 /**
@@ -35,7 +35,8 @@ export const httpGet = async (url, params = {}) => {
     const res = await http.get(url, { params });
     return { ok: true, data: res.data, status: res.status };
   } catch (err) {
-    const msg = err.response?.data?.message || err.message || 'Erro na requisição';
+    const msg =
+      err.response?.data?.message || err.message || "Erro na requisição";
     const status = err.response?.status || 0;
     return { ok: false, error: msg, status };
   }
@@ -49,7 +50,8 @@ export const httpPost = async (url, body = {}, headers = {}) => {
     const res = await http.post(url, body, { headers });
     return { ok: true, data: res.data, status: res.status };
   } catch (err) {
-    const msg = err.response?.data?.message || err.message || 'Erro na requisição';
+    const msg =
+      err.response?.data?.message || err.message || "Erro na requisição";
     const status = err.response?.status || 0;
     return { ok: false, error: msg, status };
   }

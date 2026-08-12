@@ -2,13 +2,13 @@ import fs from "fs/promises";
 import path from "path";
 import { fileURLToPath } from "url";
 import { logInfo, logError, logWarn } from "../utils/logger.js";
-import { personalizarCurriculo } from "../analisar/curriculoPersonalizador.service.js";
-import { gerarPdfCurriculo } from "../pdf/pdfGenerator.service.js";
+import { personalizarCurriculo } from "../services/curriculoPersonalizadorService.js";
+import { gerarPdfCurriculo } from "../services/pdfGeneratorService.js";
 import {
   enviarCurriculo,
   validarConfiguracaoEmail,
-} from "../email/email.service.js";
-import { gerarResumo } from "../analisar/resumoProfissional.service.js";
+} from "../services/emailService.js";
+import { gerarResumo } from "../services/resumoProfissionalService.js";
 import { asyncHandler, AppError } from "../middleware/errorHandler.js";
 import config from "../config/index.js";
 

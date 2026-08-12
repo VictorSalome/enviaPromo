@@ -1,12 +1,12 @@
-import { buscarVagas } from './feed.service.js';
-import { calcularCompatibilidade } from './match.service.js';
-import { extrairDadosVaga } from '../analisar/vagaExtractor.service.js';
-import { personalizarCurriculo } from '../analisar/curriculoPersonalizador.service.js';
-import { gerarPdfCurriculo } from '../pdf/pdfGenerator.service.js';
-import { enviarCurriculo } from '../email/email.service.js';
-import { logInfo, logError, logWarn } from '../utils/logger.js';
-import path from 'path';
-import fs from 'fs';
+import { buscarVagas } from "./feed.service.js";
+import { calcularCompatibilidade } from "./match.service.js";
+import { extrairDadosVaga } from "../analisar/vagaExtractor.service.js";
+import { personalizarCurriculo } from "../analisar/curriculoPersonalizador.service.js";
+import { gerarPdfCurriculo } from "../pdf/pdfGenerator.service.js";
+import { enviarCurriculo } from "../email/email.service.js";
+import { logInfo, logError, logWarn } from "../utils/logger.js";
+import path from "path";
+import fs from "fs";
 
 /**
  * Pipeline completo: busca → match → gera currículo → envia email
@@ -19,7 +19,7 @@ import fs from 'fs';
  * @returns {Object} Resultado do pipeline
  */
 export const executarPipeline = async ({
-  query = '',
+  query = "",
   tags = [],
   minScore = 70,
   limit = 10,
@@ -28,7 +28,7 @@ export const executarPipeline = async ({
   const startTime = Date.now();
   const resultados = { buscas: [], applied: [], skipped: [], erros: [] };
 
-  logInfo('Iniciando pipeline auto-apply', { query, tags, minScore, autoSend });
+  logInfo("Iniciando pipeline auto-apply", { query, tags, minScore, autoSend });
 
   // 1. Buscar vagas
   const vagas = await buscarVagas({ query, tags, limit: Math.min(limit, 20) });
@@ -38,15 +38,26 @@ export const executarPipeline = async ({
   for (const vaga of vagas) {
     try {
       const match = calcularCompatibilidade(vaga);
-      resultados.buscas.push({ title: vaga.title, company: vaga.company, score: match.score });
+      resultados.buscas.push({
+        title: vaga.title,
+        company: vaga.company,
+        score: match.score,
+      });
 
       if (match.score < minScore) {
-        resultados.skipped.push({ title: vaga.title, company: vaga.company, score: match.score, reason: 'Score abaixo do mínimo' });
+        resultados.skipped.push({
+          title: vaga.title,
+          company: vaga.company,
+          score: match.score,
+          reason: "Score abaixo do mínimo",
+        });
         continue;
       }
 
       // 3. Gerar currículo personalizado
-      logInfo(`Gerando currículo para: ${vaga.title} @ ${vaga.company} (${match.score}%)`);
+      logInfo(
+        `Gerando currículo para: ${vaga.title} @ ${vaga.company} (${match.score}%)`,
+      );
 
       const textoVaga = `${vaga.title}\n${vaga.company}\n${vaga.description}`;
       const dadosVaga = await extrairDadosVaga(textoVaga);
@@ -63,7 +74,7 @@ export const executarPipeline = async ({
         arquivo: nomeArquivo,
         url: vaga.url,
         email: dadosVaga.emailContato,
-        status: 'curriculo_gerado',
+        status: "curriculo_gerado",
       };
 
       // 4. Enviar email se autoSend=true e tiver email
@@ -74,15 +85,15 @@ export const executarPipeline = async ({
             emailDestino: dadosVaga.emailContato,
             vagaTitulo: vaga.title,
           });
-          resultado.status = 'enviado';
+          resultado.status = "enviado";
           logInfo(`Email enviado: ${vaga.title} → ${dadosVaga.emailContato}`);
         } catch (err) {
-          resultado.status = 'erro_envio';
+          resultado.status = "erro_envio";
           resultado.erroEnvio = err.message;
           logError(`Erro ao enviar: ${err.message}`);
         }
       } else if (!dadosVaga.emailContato) {
-        resultado.status = 'sem_email';
+        resultado.status = "sem_email";
         logWarn(`Sem email na vaga: ${vaga.title}`);
       }
 
@@ -97,13 +108,14 @@ export const executarPipeline = async ({
   resultados.resumo = {
     total: vagas.length,
     compatveis: resultados.applied.length,
-    enviados: resultados.applied.filter((a) => a.status === 'enviado').length,
-    gerados: resultados.applied.filter((a) => a.status === 'curriculo_gerado').length,
-    semEmail: resultados.applied.filter((a) => a.status === 'sem_email').length,
+    enviados: resultados.applied.filter((a) => a.status === "enviado").length,
+    gerados: resultados.applied.filter((a) => a.status === "curriculo_gerado")
+      .length,
+    semEmail: resultados.applied.filter((a) => a.status === "sem_email").length,
     erros: resultados.erros.length,
     tempoTotal: `${totalTime}ms`,
   };
 
-  logInfo('Pipeline concluído', resultados.resumo);
+  logInfo("Pipeline concluído", resultados.resumo);
   return resultados;
 };

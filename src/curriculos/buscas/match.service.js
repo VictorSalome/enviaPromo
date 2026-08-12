@@ -1,6 +1,6 @@
-import { logInfo } from '../utils/logger.js';
-import fs from 'fs';
-import path from 'path';
+import { logInfo } from "../utils/logger.js";
+import fs from "fs";
+import path from "path";
 
 let cachedProfile = null;
 
@@ -9,9 +9,9 @@ let cachedProfile = null;
  */
 function loadProfile() {
   if (cachedProfile) return cachedProfile;
-  const profilePath = path.join(process.cwd(), 'candidate-profile.json');
+  const profilePath = path.join(process.cwd(), "candidate-profile.json");
   if (!fs.existsSync(profilePath)) return null;
-  cachedProfile = JSON.parse(fs.readFileSync(profilePath, 'utf-8'));
+  cachedProfile = JSON.parse(fs.readFileSync(profilePath, "utf-8"));
   return cachedProfile;
 }
 
@@ -22,7 +22,13 @@ function loadProfile() {
  */
 export const calcularCompatibilidade = (vaga) => {
   const profile = loadProfile();
-  if (!profile) return { score: 0, matches: [], missing: [], summary: 'Perfil não encontrado' };
+  if (!profile)
+    return {
+      score: 0,
+      matches: [],
+      missing: [],
+      summary: "Perfil não encontrado",
+    };
 
   const profileSkills = extrairSkillsDoPerfil(profile);
   const vagaSkills = extrairSkillsDaVaga(vaga);
@@ -32,9 +38,10 @@ export const calcularCompatibilidade = (vaga) => {
   const missing = [];
 
   for (const skill of vagaSkills) {
-    const found = profileSkills.find((ps) =>
-      ps.toLowerCase().includes(skill.toLowerCase()) ||
-      skill.toLowerCase().includes(ps.toLowerCase())
+    const found = profileSkills.find(
+      (ps) =>
+        ps.toLowerCase().includes(skill.toLowerCase()) ||
+        skill.toLowerCase().includes(ps.toLowerCase()),
     );
     if (found) {
       matches.push({ required: skill, found });
@@ -44,9 +51,8 @@ export const calcularCompatibilidade = (vaga) => {
   }
 
   // ── Score por skills (70%) ──
-  const skillScore = vagaSkills.length > 0
-    ? (matches.length / vagaSkills.length) * 70
-    : 35;
+  const skillScore =
+    vagaSkills.length > 0 ? (matches.length / vagaSkills.length) * 70 : 35;
 
   // ── Match de localização (15%) ──
   const locScore = calcularScoreLocalizacao(vaga, profile) * 15;
@@ -71,7 +77,7 @@ function extrairSkillsDoPerfil(profile) {
   // skills pode ser array ou objeto com categorias
   if (Array.isArray(profile.skills)) {
     profile.skills.forEach((s) => skills.add(s));
-  } else if (profile.skills && typeof profile.skills === 'object') {
+  } else if (profile.skills && typeof profile.skills === "object") {
     Object.values(profile.skills).forEach((arr) => {
       if (Array.isArray(arr)) arr.forEach((s) => skills.add(s));
     });
@@ -92,28 +98,84 @@ function extrairSkillsDoPerfil(profile) {
  */
 function extrairSkillsDaVaga(vaga) {
   const skills = new Set();
-  const texto = `${vaga.title} ${vaga.description} ${(vaga.tags || []).join(' ')}`.toLowerCase();
+  const texto =
+    `${vaga.title} ${vaga.description} ${(vaga.tags || []).join(" ")}`.toLowerCase();
 
   // Lista de tecnologias comuns para detectar
   const tecnologias = [
-    'react', 'next.js', 'nextjs', 'vue', 'angular', 'svelte',
-    'node.js', 'nodejs', 'node', 'express', 'nestjs', 'fastify',
-    'typescript', 'javascript', 'python', 'java', 'go', 'rust', 'php',
-    'react native', 'flutter', 'swift', 'kotlin',
-    'postgresql', 'mysql', 'mongodb', 'redis', 'sqlite',
-    'aws', 'gcp', 'azure', 'docker', 'kubernetes', 'ci/cd',
-    'graphql', 'rest api', 'rest', 'api',
-    'tailwind', 'css', 'html', 'sass',
-    'git', 'github', 'gitlab',
-    'prisma', 'sequelize', 'typeorm',
-    'jwt', 'oauth', 'auth',
-    'sql', 'nosql',
-    'html', 'css', 'sass', 'less',
-    'figma', 'sketch', 'design',
-    'agile', 'scrum', 'kanban',
-    'jest', 'cypress', 'playwright', 'testing',
-    'linux', 'bash', 'shell',
-    'websocket', 'socket.io', 'sse',
+    "react",
+    "next.js",
+    "nextjs",
+    "vue",
+    "angular",
+    "svelte",
+    "node.js",
+    "nodejs",
+    "node",
+    "express",
+    "nestjs",
+    "fastify",
+    "typescript",
+    "javascript",
+    "python",
+    "java",
+    "go",
+    "rust",
+    "php",
+    "react native",
+    "flutter",
+    "swift",
+    "kotlin",
+    "postgresql",
+    "mysql",
+    "mongodb",
+    "redis",
+    "sqlite",
+    "aws",
+    "gcp",
+    "azure",
+    "docker",
+    "kubernetes",
+    "ci/cd",
+    "graphql",
+    "rest api",
+    "rest",
+    "api",
+    "tailwind",
+    "css",
+    "html",
+    "sass",
+    "git",
+    "github",
+    "gitlab",
+    "prisma",
+    "sequelize",
+    "typeorm",
+    "jwt",
+    "oauth",
+    "auth",
+    "sql",
+    "nosql",
+    "html",
+    "css",
+    "sass",
+    "less",
+    "figma",
+    "sketch",
+    "design",
+    "agile",
+    "scrum",
+    "kanban",
+    "jest",
+    "cypress",
+    "playwright",
+    "testing",
+    "linux",
+    "bash",
+    "shell",
+    "websocket",
+    "socket.io",
+    "sse",
   ];
 
   for (const tech of tecnologias) {
@@ -131,13 +193,14 @@ function extrairSkillsDaVaga(vaga) {
 }
 
 function calcularScoreLocalizacao(vaga, profile) {
-  const vagaLoc = (vaga.location || '').toLowerCase();
-  const profileLoc = (profile.personalInfo?.location || '').toLowerCase();
+  const vagaLoc = (vaga.location || "").toLowerCase();
+  const profileLoc = (profile.personalInfo?.location || "").toLowerCase();
 
-  if (vagaLoc.includes('remote') || vagaLoc.includes('remoto')) return 1;
-  if (vagaLoc.includes('anywhere') || vagaLoc.includes('worldwide')) return 1;
-  if (vagaLoc.includes('brasil') || vagaLoc.includes('brazil')) return 1;
-  if (profileLoc && vagaLoc.includes(profileLoc.split(',')[0]?.trim())) return 1;
+  if (vagaLoc.includes("remote") || vagaLoc.includes("remoto")) return 1;
+  if (vagaLoc.includes("anywhere") || vagaLoc.includes("worldwide")) return 1;
+  if (vagaLoc.includes("brasil") || vagaLoc.includes("brazil")) return 1;
+  if (profileLoc && vagaLoc.includes(profileLoc.split(",")[0]?.trim()))
+    return 1;
 
   return 0.5; // Semi-match
 }
@@ -146,19 +209,34 @@ function calcularScoreNivel(vaga, profile) {
   const texto = `${vaga.title} ${vaga.description}`.toLowerCase();
 
   // Detectar se é pleno/senior (perfil tem ~3 anos = pleno)
-  if (texto.includes('pleno') || texto.includes('mid-level') || texto.includes('mid level')) return 1;
-  if (texto.includes('sênior') || texto.includes('senior')) return 0.8;
-  if (texto.includes('júnior') || texto.includes('junior') || texto.includes('entry')) return 0.7;
-  if (texto.includes('lead') || texto.includes('staff') || texto.includes('principal')) return 0.4;
+  if (
+    texto.includes("pleno") ||
+    texto.includes("mid-level") ||
+    texto.includes("mid level")
+  )
+    return 1;
+  if (texto.includes("sênior") || texto.includes("senior")) return 0.8;
+  if (
+    texto.includes("júnior") ||
+    texto.includes("junior") ||
+    texto.includes("entry")
+  )
+    return 0.7;
+  if (
+    texto.includes("lead") ||
+    texto.includes("staff") ||
+    texto.includes("principal")
+  )
+    return 0.4;
 
   return 0.8; // Default
 }
 
 function gerarResumo(score, matches, missing) {
-  if (score >= 80) return 'Excelente compatibilidade';
-  if (score >= 60) return 'Boa compatibilidade';
-  if (score >= 40) return 'Compatibilidade moderada';
-  return 'Baixa compatibilidade';
+  if (score >= 80) return "Excelente compatibilidade";
+  if (score >= 60) return "Boa compatibilidade";
+  if (score >= 40) return "Compatibilidade moderada";
+  return "Baixa compatibilidade";
 }
 
 /**
