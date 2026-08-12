@@ -17,6 +17,7 @@ import { loggerMiddleware } from "./utils/logger.js";
 import analisarRoutes from "./analisar/analisar.routes.js";
 import testeRoutes from "./teste/teste.routes.js";
 import smtpRoutes from "./smtp/smtp.routes.js";
+import buscasRoutes from "./buscas/buscas.routes.js";
 
 const app = express();
 
@@ -97,6 +98,7 @@ if (config.dev.logRequests) {
 app.use(analisarRoutes);
 app.use(testeRoutes);
 app.use(smtpRoutes);
+app.use('/buscar-vagas', buscasRoutes);
 
 // Middleware para rotas não encontradas
 app.use(notFoundHandler);
