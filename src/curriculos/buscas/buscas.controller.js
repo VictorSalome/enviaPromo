@@ -11,6 +11,12 @@ import {
   executarBusca,
   getStatus,
 } from "./scheduler.service.js";
+import {
+  iniciarLinkedinCron,
+  pararLinkedinCron,
+  executarLinkedinAgora,
+  getLinkedinStatus,
+} from "./linkedinCron.service.js";
 import { logInfo, logError } from "../utils/logger.js";
 
 /**
@@ -151,6 +157,33 @@ export const linkedinParseController = (req, res) => {
     res.json({ ok: true, total: ranqueadas.length, vagas: ranqueadas });
   } catch (err) {
     logError(`Erro no parse LinkedIn: ${err.message}`);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+};
+
+// ── LinkedIn Cron ──
+
+export const linkedinCronStatusController = (req, res) => {
+  res.json({ ok: true, ...getLinkedinStatus() });
+};
+
+export const linkedinCronStartController = (req, res) => {
+  const { cron } = req.body || {};
+  const resultado = iniciarLinkedinCron({ cron });
+  res.json({ ok: true, ...resultado });
+};
+
+export const linkedinCronStopController = (req, res) => {
+  const resultado = pararLinkedinCron();
+  res.json({ ok: true, ...resultado });
+};
+
+export const linkedinCronRunNowController = async (req, res) => {
+  try {
+    const resultado = await executarLinkedinAgora();
+    res.json({ ok: true, resultado });
+  } catch (err) {
+    logError(`Erro LinkedIn cron: ${err.message}`);
     res.status(500).json({ ok: false, error: err.message });
   }
 };
