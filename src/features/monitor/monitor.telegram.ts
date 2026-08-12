@@ -20,7 +20,7 @@ let isProcessing = false;
 let consecutiveErrors = 0;
 let lastMessageIds: Map<string, number> = new Map();
 
-// Cache de canais ativos (evita query a cada msg em tempo real)
+// Cache de canais ativos com TTL-based memoization
 let cachedActiveChannels: Set<string> | null = null;
 let channelsCacheTimestamp = 0;
 const CHANNELS_CACHE_TTL = 30_000; // 30 segundos

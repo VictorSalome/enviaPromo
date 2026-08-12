@@ -16,6 +16,9 @@ import backupRoutes from '../features/backup/backup.routes.js';
 import testConnectionRoutes from '../features/test-connection/test-connection.routes.js';
 import priceAlertRoutes from '../features/price-alert/price-alert.routes.js';
 import deployRoutes from '../features/deploy/deploy.routes.js';
+// @ts-ignore
+import resumesApp from '../modules/resumes/server.js';
+import { requireAuth } from '../features/auth/auth.middleware.js';
 
 declare module 'express-session' {
   interface SessionData {
@@ -61,19 +64,34 @@ app.use('/api/test', testConnectionRoutes);
 app.use('/api/deploy', deployRoutes);
 app.use('/api/price-alerts', priceAlertRoutes);
 
-// Serve arquivos estáticos do frontend
-app.use(express.static(path.join(__dirname, '../../public')));
-
-// Health check
+// ── Health check ──
 app.get('/api/health', (_, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Rota para SPA
-app.get('/', (_, res) => {
+// ── Curriculo API ──
+app.use('/api/curriculo', requireAuth, resumesApp);
+
+// ── Promo frontend ──
+const promoStatic = express.static(path.join(__dirname, '../../public'));
+app.use('/envia-promo', promoStatic);
+app.get('/envia-promo', (_, res) => {
   res.sendFile(path.join(__dirname, '../../public/index.html'));
 });
-
-app.get('/login', (_, res) => {
+app.get('/envia-promo/login', (_, res) => {
   res.sendFile(path.join(__dirname, '../../public/login.html'));
 });
+
+// ── Curriculo frontend ──
+const curriculoPublic = path.join(__dirname, '../modules/resumes/public');
+app.use('/envia-curriculo', requireAuth, express.static(curriculoPublic));
+app.get('/envia-curriculo', requireAuth, (_, res) => {
+  res.sendFile(path.join(curriculoPublic, 'index.html'));
+});
+app.get('/envia-curriculo/smtp-config', requireAuth, (_, res) => {
+  res.sendFile(path.join(curriculoPublic, 'smtp-config.html'));
+});
+
+// ── Root redirect ──
+app.get('/', (_, res) => res.redirect('/envia-promo'));
+app.get('/login', (_, res) => res.redirect('/envia-promo/login'));

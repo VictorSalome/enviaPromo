@@ -1,0 +1,407 @@
+import { extrairDadosVaga } from "../services/vagaExtractorService.js";
+import { personalizarCurriculo } from "../services/curriculoPersonalizadorService.js";
+import { gerarPdfCurriculo } from "../services/pdfGeneratorService.js";
+import {
+  enviarCurriculo,
+  validarConfiguracaoEmail,
+  testarConexaoSMTP,
+} from "../services/emailService.js";
+import {
+  getSmtpConfig,
+  updateSmtpConfig,
+} from "../services/smtpConfigService.js";
+import {
+  validateVagaText,
+  validateExtractedJobData,
+} from "../utils/validators.js";
+import { logInfo, logError, logWarn } from "../utils/logger.js";
+import {
+  asyncHandler,
+  ValidationError,
+  AppError,
+} from "../middleware/errorHandler.js";
+import config from "../config/index.js";
+import fs from "fs/promises";
+import { readFileSync } from "node:fs";
+import path from "path";
+const candidateProfile = JSON.parse(
+  readFileSync(path.join(process.cwd(), "candidate-profile.json"), "utf-8")
+);
+
+/**
+ * STEP 1: Gera currículo e retorna preview (sem enviar email)
+ * @param {Object} req - Request object
+ * @param {Object} res - Response object
+ */
+export const gerarCurriculoController = asyncHandler(async (req, res) => {
+  const startTime = Date.now();
+  const requestId = req.id;
+
+  logInfo("Iniciando geração do currículo", { requestId });
+
+  // 1. Validar entrada
+  const { vaga, textoVaga } = req.body;
+  const textoParaAnalise = vaga || textoVaga;
+
+  const validationResult = validateVagaText(textoParaAnalise);
+  if (!validationResult.isValid) {
+    throw new ValidationError(
+      "Dados de entrada inválidos",
+      validationResult.errors,
+    );
+  }
+
+  if (validationResult.warnings.length > 0) {
+    logWarn("Avisos na validação da entrada", {
+      warnings: validationResult.warnings,
+      requestId,
+    });
+  }
+
+  // 2. Extrair dados da vaga
+  logInfo("Extraindo dados da vaga", { requestId });
+  const dadosVaga = await extrairDadosVaga(textoParaAnalise);
+
+  const extractionValidation = validateExtractedJobData(dadosVaga);
+  if (!extractionValidation.isValid) {
+    throw new ValidationError(
+      "Falha na extração de dados da vaga",
+      extractionValidation.errors,
+    );
+  }
+
+  // 3. Personalizar currículo
+  logInfo("Personalizando currículo", {
+    vaga: dadosVaga.titulo,
+    email: dadosVaga.emailContato,
+    requestId,
+  });
+  const curriculoPersonalizado = await personalizarCurriculo(dadosVaga);
+
+  // 4. Gerar PDF
+  logInfo("Gerando PDF do currículo", { requestId });
+  const caminhoArquivoPdf = await gerarPdfCurriculo(
+    curriculoPersonalizado,
+    dadosVaga,
+  );
+
+  // 5. Manter arquivo para preview
+  const processingTime = Date.now() - startTime;
+  const nomeArquivo = path.basename(caminhoArquivoPdf);
+
+  const response = {
+    status: "success",
+    step: "preview",
+    message: "Currículo gerado com sucesso. Revise e autorize o envio.",
+    vaga: dadosVaga.titulo || "Vaga não identificada",
+    emailDestino: dadosVaga.emailContato,
+    empresa: dadosVaga.empresa,
+    curriculoGerado: nomeArquivo,
+    detalhes: {
+      relevancia: `${curriculoPersonalizado.relevanceScore}%`,
+      tecnologiasEncontradas:
+        curriculoPersonalizado.matchingSkills?.length || 0,
+      experienciasRelevantes: curriculoPersonalizado.experiences?.length || 0,
+      habilidadesMatch: curriculoPersonalizado.matchingSkills || [],
+      tempoProcessamento: `${processingTime}ms`,
+      timestamp: new Date().toISOString(),
+    },
+    previewUrl: `/temp/${nomeArquivo}`,
+    requestId,
+  };
+
+  logInfo("Geração do currículo concluída", {
+    vaga: dadosVaga.titulo,
+    relevancia: curriculoPersonalizado.relevanceScore,
+    tempoProcessamento: processingTime,
+    requestId,
+  });
+
+  res.json(response);
+});
+
+/**
+ * STEP 2: Envia currículo por email (após aprovação do usuário)
+ * @param {Object} req - Request object
+ * @param {Object} res - Response object
+ */
+export const enviarCurriculoController = asyncHandler(async (req, res) => {
+  const startTime = Date.now();
+  const requestId = req.id;
+  const isRenderRuntime =
+    process.env.RENDER === "true" ||
+    Boolean(process.env.RENDER_EXTERNAL_HOSTNAME);
+
+  const { nomeArquivo, emailDestino, vagaTitulo } = req.body;
+
+  if (!nomeArquivo) {
+    throw new ValidationError("Nome do arquivo é obrigatório", [
+      "Informe o nome do arquivo do currículo",
+    ]);
+  }
+
+  logInfo("Iniciando envio de currículo", {
+    nomeArquivo,
+    emailDestino,
+    requestId,
+  });
+
+  // Verificar se arquivo existe
+  const tempDir = path.join(process.cwd(), process.env.TEMP_DIR || "temp");
+  const caminhoArquivoPdf = path.join(tempDir, nomeArquivo);
+
+  try {
+    await fs.access(caminhoArquivoPdf);
+  } catch {
+    throw new AppError(
+      "Arquivo do currículo não encontrado. Gere o currículo novamente.",
+      404,
+    );
+  }
+
+  // Verificar configuração de email
+  if (!validarConfiguracaoEmail()) {
+    logWarn("Configuração de e-mail não disponível", { requestId });
+
+    if (config.server.env === "production") {
+      throw new AppError("Serviço de e-mail não configurado", 503);
+    }
+  }
+
+  // Enviar email
+  let resultadoEmail;
+  try {
+    const info = candidateProfile.personalInfo || {};
+    resultadoEmail = await enviarCurriculo(
+      emailDestino,
+      caminhoArquivoPdf,
+      { titulo: vagaTitulo, emailContato: emailDestino },
+      {
+        name: info.name || "Victor Salome Sousa",
+        email: info.email,
+        phone: info.phone,
+        linkedin: info.linkedin,
+        github: info.github,
+        portfolio: info.portfolio,
+      },
+    );
+  } catch (emailError) {
+    logError("Erro no envio de e-mail", emailError);
+
+    if (config.server.env === "development" && !isRenderRuntime) {
+      logWarn("Simulando envio (modo desenvolvimento)", { requestId });
+      resultadoEmail = {
+        sucesso: true,
+        messageId: `dev-mode-${Date.now()}`,
+        previewUrl: `/temp/${nomeArquivo}`,
+      };
+    } else {
+      const smtpMessage = String(emailError?.message || "Erro SMTP").replace(
+        /^Falha no envio do e-mail:\s*/i,
+        "",
+      );
+      throw new AppError(`Falha no envio do e-mail: ${smtpMessage}`, 503);
+    }
+  }
+
+  if (req.timedout || res.headersSent || res.writableEnded) {
+    logWarn("Resposta abortada: requisição expirou antes de finalizar envio", {
+      requestId,
+    });
+    return;
+  }
+
+  const processingTime = Date.now() - startTime;
+
+  // Limpar arquivo (apenas em produção)
+  if (config.server.env !== "development") {
+    try {
+      await fs.unlink(caminhoArquivoPdf);
+    } catch (error) {
+      logWarn("Erro ao remover arquivo temporário", {
+        error: error.message,
+        requestId,
+      });
+    }
+  }
+
+  const response = {
+    status: "success",
+    step: "sent",
+    message: "Currículo enviado com sucesso!",
+    email: {
+      enviado: resultadoEmail.sucesso,
+      messageId: resultadoEmail.messageId,
+      destino: emailDestino,
+    },
+    tempoProcessamento: `${processingTime}ms`,
+    requestId,
+  };
+
+  logInfo("Currículo enviado com sucesso", {
+    emailDestino,
+    resultado: resultadoEmail.sucesso,
+    requestId,
+  });
+
+  res.json(response);
+});
+
+/**
+ * Controller para verificar status da API
+ * @param {Object} req - Request object
+ * @param {Object} res - Response object
+ */
+export const statusController = asyncHandler(async (req, res) => {
+  const startTime = Date.now();
+
+  const services = {
+    vagaExtractor: "online",
+    curriculoPersonalizador: "online",
+    pdfGenerator: "online",
+    emailService: validarConfiguracaoEmail() ? "online" : "offline",
+  };
+
+  let filesystemStatus = "online";
+  try {
+    await fs.access(config.paths.temp);
+  } catch (error) {
+    filesystemStatus = "error";
+    logWarn("Erro no acesso ao sistema de arquivos", error);
+  }
+
+  const memoryUsage = process.memoryUsage();
+  const memoryInfo = {
+    rss: `${Math.round(memoryUsage.rss / 1024 / 1024)}MB`,
+    heapTotal: `${Math.round(memoryUsage.heapTotal / 1024 / 1024)}MB`,
+    heapUsed: `${Math.round(memoryUsage.heapUsed / 1024 / 1024)}MB`,
+    external: `${Math.round(memoryUsage.external / 1024 / 1024)}MB`,
+  };
+
+  const responseTime = Date.now() - startTime;
+
+  const healthStatus = {
+    status: "success",
+    message: "Sistema de Currículo Automatizado funcionando",
+    timestamp: new Date().toISOString(),
+    version: "1.0.0",
+    environment: config.server.env,
+    uptime: `${Math.floor(process.uptime())}s`,
+    responseTime: `${responseTime}ms`,
+    services,
+    system: {
+      filesystem: filesystemStatus,
+      memory: memoryInfo,
+      nodeVersion: process.version,
+      platform: process.platform,
+    },
+    config: {
+      logLevel: config.log.level,
+      rateLimitMax: config.rateLimit.max,
+      rateLimitWindow: `${config.rateLimit.windowMs / 1000}s`,
+    },
+  };
+
+  const hasOfflineServices =
+    Object.values(services).includes("offline") ||
+    Object.values(services).includes("error") ||
+    filesystemStatus === "error";
+
+  const statusCode = hasOfflineServices ? 503 : 200;
+
+  if (hasOfflineServices) {
+    healthStatus.status = "degraded";
+    healthStatus.message = "Sistema funcionando com limitações";
+  }
+
+  res.status(statusCode).json(healthStatus);
+});
+
+/**
+ * Controller para testar conexão SMTP em tempo real
+ * @param {Object} req - Request object
+ * @param {Object} res - Response object
+ */
+export const testarSMTPController = asyncHandler(async (req, res) => {
+  const startTime = Date.now();
+  const requestId = req.id;
+
+  const configurado = validarConfiguracaoEmail();
+  const envInfo = {
+    host: process.env.SMTP_HOST || null,
+    port: process.env.SMTP_PORT || null,
+    secure: process.env.SMTP_SECURE || null,
+    userConfigured: Boolean(process.env.SMTP_USER),
+    passConfigured: Boolean(process.env.SMTP_PASS),
+  };
+
+  if (!configurado) {
+    return res.status(503).json({
+      success: false,
+      status: "error",
+      message: "Configuração SMTP incompleta",
+      smtp: {
+        configured: false,
+        connected: false,
+        ...envInfo,
+      },
+      responseTime: `${Date.now() - startTime}ms`,
+      requestId,
+    });
+  }
+
+  const testResult = await testarConexaoSMTP();
+
+  return res.status(testResult.success ? 200 : 503).json({
+    success: testResult.success,
+    status: testResult.success ? "success" : "error",
+    message: testResult.success
+      ? `Conexão SMTP validada com sucesso${testResult.usedFallback ? " (usando fallback porta 465)" : ""}`
+      : "Falha ao conectar no SMTP (teste ambas portas 587 e 465)",
+    smtp: {
+      configured: true,
+      connected: testResult.success,
+      ...envInfo,
+      testedHost: testResult.host,
+      testedPort: testResult.port,
+      usedSSL: testResult.secure,
+      usedFallback: testResult.usedFallback || false,
+    },
+    responseTime: `${Date.now() - startTime}ms`,
+    requestId,
+  });
+});
+
+/**
+ * Retorna a configuração SMTP atual para a página de configuração
+ */
+export const obterConfigSMTPController = asyncHandler(async (req, res) => {
+  return res.json({
+    success: true,
+    status: "success",
+    smtp: getSmtpConfig(),
+    requestId: req.id,
+  });
+});
+
+/**
+ * Atualiza configuração SMTP em runtime e persiste em arquivo local
+ */
+export const atualizarConfigSMTPController = asyncHandler(async (req, res) => {
+  try {
+    const smtpConfig = await updateSmtpConfig(req.body || {});
+
+    return res.json({
+      success: true,
+      status: "success",
+      message: "Configuração SMTP atualizada com sucesso",
+      smtp: smtpConfig,
+      requestId: req.id,
+    });
+  } catch (error) {
+    throw new ValidationError(
+      "Falha ao atualizar configuração SMTP",
+      error?.details || [error.message],
+    );
+  }
+});

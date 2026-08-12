@@ -26,6 +26,7 @@ export const addSentMessage = async (data: {
 export const isDuplicate = async (link?: string, product?: string, price?: number, minutes: number = 30): Promise<boolean> => {
   const db = await getDb();
   const p = price || 0;
+  const safeMinutes = Math.max(1, Math.floor(minutes)); // Sanitize: integer >= 1
 
   const existing = await db.get(
     `SELECT 1 FROM sent_messages 
@@ -33,9 +34,9 @@ export const isDuplicate = async (link?: string, product?: string, price?: numbe
        (link = ? AND price = ?)
        OR (product = ? AND price = ?)
      )
-     AND sent_at > datetime('now', '-' || ? || ' minutes')
+     AND sent_at > datetime('now', ? || ' minutes')
      LIMIT 1`,
-    link || '', p, product || '', p, minutes
+    link || '', p, product || '', p, `-${safeMinutes}`
   );
   return !!existing;
 };
