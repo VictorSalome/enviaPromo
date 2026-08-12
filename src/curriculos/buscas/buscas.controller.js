@@ -1,5 +1,6 @@
 import { buscarVagas, buscarVagaFonte, getFontes } from './feed.service.js';
 import { ranquearVagas } from './match.service.js';
+import { executarPipeline } from './autoApply.service.js';
 import { logInfo, logError } from '../utils/logger.js';
 
 /**
@@ -64,6 +65,31 @@ export const buscarPorFonteController = async (req, res) => {
     });
   } catch (err) {
     logError(`Erro na busca por fonte: ${err.message}`);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+};
+
+/**
+ * POST /buscar-vagas/auto-apply
+ * Pipeline completo: busca → match → gera currículo → envia
+ */
+export const autoApplyController = async (req, res) => {
+  try {
+    const { query, tags, minScore, limit, autoSend } = req.body || {};
+
+    logInfo(`Auto-apply iniciado: minScore=${minScore || 70} autoSend=${autoSend || false}`);
+
+    const resultado = await executarPipeline({
+      query: query || '',
+      tags: tags || [],
+      minScore: minScore || 70,
+      limit: Math.min(limit || 10, 20),
+      autoSend: autoSend || false,
+    });
+
+    res.json({ ok: true, ...resultado });
+  } catch (err) {
+    logError(`Erro no auto-apply: ${err.message}`);
     res.status(500).json({ ok: false, error: err.message });
   }
 };
