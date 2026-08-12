@@ -72,9 +72,11 @@ app.get('/api/health', (_, res) => {
 // ── Curriculo API ──
 app.use('/api/curriculo', requireAuth, resumesApp);
 
+// ── Root static (CSS/JS only, sem index) ──
+app.use(express.static(path.join(__dirname, '../../public'), { index: false }));
+
 // ── Promo frontend ──
-const promoStatic = express.static(path.join(__dirname, '../../public'));
-app.use('/envia-promo', promoStatic);
+app.use('/envia-promo', express.static(path.join(__dirname, '../../public')));
 app.get('/envia-promo', (_, res) => {
   res.sendFile(path.join(__dirname, '../../public/index.html'));
 });
