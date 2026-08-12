@@ -730,6 +730,81 @@
         padding-bottom: 12px;
         border-bottom: 1px solid var(--cream);
       }
+      /* ── Scheduler Monitor ── */
+      .monitor-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+        margin-bottom: 18px;
+      }
+      .monitor-stat {
+        padding: 14px;
+        background: var(--paper);
+        border-radius: var(--radius);
+        border: 1px solid var(--cream);
+        text-align: center;
+      }
+      .monitor-stat .val {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 22px;
+        font-weight: 600;
+        color: var(--ink);
+      }
+      .monitor-stat .label {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        color: var(--ink-muted);
+        margin-top: 4px;
+      }
+      .monitor-status {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 14px;
+        background: var(--paper);
+        border-radius: var(--radius);
+        border: 1px solid var(--cream);
+        margin-bottom: 14px;
+        font-size: 13px;
+      }
+      .monitor-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
+      .monitor-dot.on {
+        background: var(--emerald);
+        box-shadow: 0 0 6px var(--emerald);
+      }
+      .monitor-dot.off {
+        background: var(--rose);
+      }
+      .monitor-actions {
+        display: flex;
+        gap: 8px;
+      }
+      @media (max-width: 768px) {
+        .monitor-grid { grid-template-columns: 1fr 1fr; }
+      }
+      /* ── LinkedIn ── */
+      .linkedin-area {
+        margin-top: 16px;
+        padding-top: 16px;
+        border-top: 1px solid var(--cream);
+      }
+      .linkedin-area h4 {
+        font-family: "Playfair Display", Georgia, serif;
+        font-size: 15px;
+        margin-bottom: 8px;
+      }
+      .linkedin-area textarea {
+        height: 120px;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 11px;
+      }
+      .linkedin-results { margin-top: 12px; }
     </style>
   </head>
   <body>
@@ -1115,6 +1190,57 @@ Requisitos:
         </div>
       </div>
     </section>
+    <!-- ── Monitor 24/7 + LinkedIn ── -->
+    <section class="search-section" style="padding-top:0">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start">
+        <!-- Scheduler Monitor -->
+        <div class="panel">
+          <div class="panel-head">
+            <div class="icon" style="background:var(--emerald-glow);color:var(--emerald)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
+            <h2>Monitor 24/7</h2>
+          </div>
+          <div class="panel-body">
+            <div class="monitor-status" id="monitorStatus">
+              <span class="monitor-dot" id="monitorDot"></span>
+              <span id="monitorText">Carregando…</span>
+            </div>
+            <div class="monitor-grid">
+              <div class="monitor-stat"><div class="val" id="monTotal">-</div><div class="label">Total</div></div>
+              <div class="monitor-stat"><div class="val" id="monCompat" style="color:var(--emerald)">-</div><div class="label">Compatíveis</div></div>
+              <div class="monitor-stat"><div class="val" id="monEnv" style="color:var(--gold)">-</div><div class="label">Enviados</div></div>
+              <div class="monitor-stat"><div class="val" id="monErro" style="color:var(--rose)">-</div><div class="label">Erros</div></div>
+            </div>
+            <div class="monitor-actions">
+              <button class="btn btn-ghost btn-sm" onclick="schedulerStatus()">Atualizar</button>
+              <button class="btn btn-ghost btn-sm" id="schedulerToggle" onclick="toggleScheduler()">Iniciar</button>
+              <button class="btn btn-gold btn-sm" onclick="schedulerRunNow()">Executar Agora</button>
+            </div>
+          </div>
+        </div>
+        <!-- LinkedIn Parser -->
+        <div class="panel">
+          <div class="panel-head">
+            <div class="icon" style="background:var(--gold-glow);color:var(--gold)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+            </div>
+            <h2>LinkedIn Parser</h2>
+          </div>
+          <div class="panel-body">
+            <p style="font-size:13px;color:var(--ink-muted);margin-bottom:12px">Cole o HTML de busca do LinkedIn (Ctrl+U ou inspetor). O sistema extrai vagas com email automaticamente.</p>
+            <textarea id="linkedinHtml" placeholder="Cole aqui o HTML da busca do LinkedIn...&#10;&#10;Ex: https://linkedin.com/search/results/content/?keywords=Vaga+Desenvolvedor+Email"></textarea>
+            <div style="display:flex;gap:8px;margin-top:10px">
+              <button class="btn btn-gold btn-sm" onclick="parseLinkedIn()" style="flex:1">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                Parsear HTML
+              </button>
+            </div>
+            <div id="linkedinResults" class="linkedin-results"></div>
+          </div>
+        </div>
+      </div>
+    </section>
     <script>
       let currentPdf = null,
         currentEmail = null,
@@ -1424,6 +1550,89 @@ Requisitos:
         document.getElementById("vagaText").focus();
         window.scrollTo({ top: 0, behavior: "smooth" });
       }
+      // ── Scheduler Monitor ──
+      async function schedulerStatus() {
+        try {
+          const r = await fetch("/api/curriculo/buscar-vagas/scheduler", { credentials: "include" });
+          const d = await r.json();
+          const dot = document.getElementById("monitorDot");
+          const txt = document.getElementById("monitorText");
+          const toggle = document.getElementById("schedulerToggle");
+          if (d.rodando) {
+            dot.className = "monitor-dot on";
+            txt.textContent = "Rodando 24/7 • Buscando vagas a cada hora";
+            toggle.textContent = "Parar";
+          } else {
+            dot.className = "monitor-dot off";
+            txt.textContent = "Parado";
+            toggle.textContent = "Iniciar";
+          }
+          if (d.ultimaExecucao) {
+            const u = d.ultimaExecucao;
+            document.getElementById("monTotal").textContent = u.total || 0;
+            document.getElementById("monCompat").textContent = u.compatveis || 0;
+            document.getElementById("monEnv").textContent = u.enviados || 0;
+            document.getElementById("monErro").textContent = u.erros || 0;
+          }
+        } catch (e) { console.error(e); }
+      }
+      async function toggleScheduler() {
+        const btn = document.getElementById("schedulerToggle");
+        const isRunning = btn.textContent === "Parar";
+        try {
+          await fetch(`/api/curriculo/buscar-vagas/scheduler/${isRunning ? "stop" : "start"}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: isRunning ? "{}" : JSON.stringify({ minScore: 60, autoSend: true })
+          });
+          setTimeout(schedulerStatus, 500);
+        } catch (e) { console.error(e); }
+      }
+      async function schedulerRunNow() {
+        const btn = event.target; btn.disabled = true; btn.textContent = "Executando…";
+        try {
+          const r = await fetch("/api/curriculo/buscar-vagas/scheduler/run", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ minScore: 60, autoSend: true })
+          });
+          const d = await r.json();
+          if (d.ok && d.resumo) {
+            alert(`Executado!\nTotal: ${d.resumo.total}\nCompatíveis: ${d.resumo.compatveis}\nEnviados: ${d.resumo.enviados}`);
+          }
+          schedulerStatus();
+        } catch (e) { alert("Erro: " + e.message); }
+        finally { btn.disabled = false; btn.textContent = "Executar Agora"; }
+      }
+      // ── LinkedIn Parser ──
+      async function parseLinkedIn() {
+        const html = document.getElementById("linkedinHtml").value.trim();
+        if (!html) { alert("Cole o HTML primeiro"); return; }
+        const el = document.getElementById("linkedinResults");
+        el.innerHTML = '<div class="loader" style="display:block"><div class="loader-ring"></div><div class="loader-text">Parseando…</div></div>';
+        try {
+          const r = await fetch("/api/curriculo/buscar-vagas/linkedin", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ html })
+          });
+          const d = await r.json();
+          if (!d.ok) throw new Error(d.error);
+          if (!d.vagas.length) { el.innerHTML = '<p style="color:var(--ink-muted);font-size:13px">Nenhuma vaga com email encontrada no HTML.</p>'; return; }
+          let h = `<div class="search-summary">${d.vagas.length} vagas extraídas do LinkedIn</div>`;
+          d.vagas.forEach(v => {
+            const sc = v.match.score; const cls = sc >= 70 ? "score-high" : sc >= 50 ? "score-mid" : "score-low";
+            const emails = (v._emails || []).join(", ");
+            h += `<div class="job-card"><div><div class="job-title">${v.title}</div><div class="job-company">${v.company||"LinkedIn"}</div><div class="job-meta">${v.location?`<span>📍 ${v.location}</span>`:""}${emails?`<span>📧 ${emails}</span>`:""}</div></div><div class="job-score"><div class="score-circle ${cls}">${sc}%</div><div class="job-actions"><button class="btn btn-ghost btn-sm" onclick="usarVaga('${encodeURIComponent(JSON.stringify({title:v.title,company:v.company,description:v.description||""}))}')">Usar</button></div></div></div>`;
+          });
+          el.innerHTML = h;
+        } catch (e) { el.innerHTML = `<div class="msg msg-err" style="display:block">${e.message}</div>`; }
+      }
+      // Auto-load scheduler status
+      document.addEventListener("DOMContentLoaded", () => { schedulerStatus(); });
     </script>
   </body>
 </html>

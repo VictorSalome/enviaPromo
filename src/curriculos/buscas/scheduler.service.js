@@ -13,8 +13,13 @@ let configAtual = {};
  */
 export const iniciarScheduler = ({
   cron: cronExpr = "0 */1 * * *",
-  tags = ["react", "node", "typescript", "full stack", "javascript", "next.js"],
-  minScore = 65,
+  tags = [
+    "react", "react native", "next.js", "node", "node.js", "typescript",
+    "javascript", "full stack", "fullstack", "frontend", "backend",
+    "mobile", "flutter", "angular", "vue", "python", "java", "php",
+    "dotnet", "c#", "nest", "nestjs", "express", "aws", "docker",
+  ],
+  minScore = 60,
   autoSend = true,
 } = {}) => {
   if (tarefaAtiva) {
