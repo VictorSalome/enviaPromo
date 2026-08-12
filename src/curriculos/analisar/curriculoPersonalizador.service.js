@@ -1,8 +1,8 @@
 import fs from "fs/promises";
 import path from "path";
 import { logInfo, logError } from "../utils/logger.js";
-import { calculateSimilarity } from "../utils/text-utils.js";
-import { gerarResumo } from "./resumo-profissional.service.js";
+import { calculateSimilarity } from "../utils/textUtils.js";
+import { gerarResumo } from "./resumoProfissional.service.js";
 
 const normalizeText = (value = "") =>
   String(value)

@@ -1,15 +1,15 @@
-import { extrairDadosVaga } from "../services/vaga-extractor.service.js";
-import { personalizarCurriculo } from "../services/curriculo-personalizador.service.js";
-import { gerarPdfCurriculo } from "../services/pdf-generator.service.js";
+import { extrairDadosVaga } from "./vagaExtractor.service.js";
+import { personalizarCurriculo } from "./curriculoPersonalizador.service.js";
+import { gerarPdfCurriculo } from "../pdf/pdfGenerator.service.js";
 import {
   enviarCurriculo,
   validarConfiguracaoEmail,
   testarConexaoSMTP,
-} from "../services/email.service.js";
+} from "../email/email.service.js";
 import {
   getSmtpConfig,
   updateSmtpConfig,
-} from "../services/smtp-config.service.js";
+} from "../smtp/smtpConfig.service.js";
 import {
   validateVagaText,
   validateExtractedJobData,
@@ -19,7 +19,7 @@ import {
   asyncHandler,
   ValidationError,
   AppError,
-} from "../middleware/error-handler.js";
+} from "../middleware/errorHandler.js";
 import config from "../config/index.js";
 import fs from "fs/promises";
 import { readFileSync } from "node:fs";

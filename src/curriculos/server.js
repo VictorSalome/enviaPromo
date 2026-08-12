@@ -4,27 +4,19 @@ import rateLimit from "express-rate-limit";
 import path from "path";
 import { fileURLToPath } from "url";
 import config from "./config/index.js";
-import {
-  gerarCurriculoController,
-  enviarCurriculoController,
-  statusController,
-  testarSMTPController,
-  obterConfigSMTPController,
-  atualizarConfigSMTPController,
-} from "./controllers/analisar-publicacao.controller.js";
-import { initializeSmtpRuntimeConfig } from "./services/smtp-config.service.js";
-import {
-  visualizarCurriculoHTML,
-  enviarCurriculoTesteHTML,
-} from "./controllers/curriculo-teste.controller.js";
+import { initializeSmtpRuntimeConfig } from "./smtp/smtpConfig.service.js";
 import {
   errorHandler,
   notFoundHandler,
   requestIdMiddleware,
   timeoutMiddleware,
   contentTypeMiddleware,
-} from "./middleware/error-handler.js";
-import { loggerMiddleware, logInfo, logError } from "./utils/logger.js";
+} from "./middleware/errorHandler.js";
+import { loggerMiddleware } from "./utils/logger.js";
+
+import analisarRoutes from "./analisar/analisar.routes.js";
+import testeRoutes from "./teste/teste.routes.js";
+import smtpRoutes from "./smtp/smtp.routes.js";
 
 const app = express();
 
@@ -33,13 +25,13 @@ await initializeSmtpRuntimeConfig();
 // Serve static files from public directory
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-app.use(express.static(path.join(__dirname, "../public")));
+app.use(express.static(path.join(__dirname, "public")));
 // Expose temporary files for preview during development
 app.use("/temp", express.static(config.paths.temp));
 
 // Rota explícita para servir o frontend
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "../public/index.html"));
+  res.sendFile(path.join(__dirname, "public/index.html"));
 });
 
 // Middleware de request ID
@@ -101,20 +93,10 @@ if (config.dev.logRequests) {
   app.use(loggerMiddleware);
 }
 
-// Health check
-app.get("/health", statusController);
-app.get("/status", statusController);
-
-// Rotas principais - Fluxo em 2 etapas
-app.post("/gerar-curriculo", gerarCurriculoController);
-app.post("/enviar-curriculo", enviarCurriculoController);
-
-// Rotas auxiliares
-app.get("/smtp-test", testarSMTPController);
-app.get("/config/smtp", obterConfigSMTPController);
-app.put("/config/smtp", atualizarConfigSMTPController);
-app.get("/curriculo-html", visualizarCurriculoHTML);
-app.post("/curriculo-teste-email", enviarCurriculoTesteHTML);
+// ── Feature routes ──
+app.use(analisarRoutes);
+app.use(testeRoutes);
+app.use(smtpRoutes);
 
 // Middleware para rotas não encontradas
 app.use(notFoundHandler);

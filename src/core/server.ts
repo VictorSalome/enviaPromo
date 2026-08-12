@@ -5,20 +5,20 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { config } from './config.js';
 
-import authRoutes from '../features/auth/auth.routes.js';
-import telegramConfigRoutes from '../features/telegram-config/telegram-config.routes.js';
-import channelRoutes from '../features/channel/channel.routes.js';
-import filterRoutes from '../features/filter/filter.routes.js';
-import monitorRoutes from '../features/monitor/monitor.routes.js';
-import discordRoutes from '../features/discord/discord.routes.js';
-import statsRoutes from '../features/stats/stats.routes.js';
-import backupRoutes from '../features/backup/backup.routes.js';
-import testConnectionRoutes from '../features/test-connection/test-connection.routes.js';
-import priceAlertRoutes from '../features/price-alert/price-alert.routes.js';
-import deployRoutes from '../features/deploy/deploy.routes.js';
+import authRoutes from '../promo/auth/auth.routes.js';
+import telegramConfigRoutes from '../promo/telegram-config/telegram-config.routes.js';
+import channelRoutes from '../promo/channel/channel.routes.js';
+import filterRoutes from '../promo/filter/filter.routes.js';
+import monitorRoutes from '../promo/monitor/monitor.routes.js';
+import discordRoutes from '../promo/discord/discord.routes.js';
+import statsRoutes from '../promo/stats/stats.routes.js';
+import backupRoutes from '../promo/backup/backup.routes.js';
+import testConnectionRoutes from '../promo/test-connection/test-connection.routes.js';
+import priceAlertRoutes from '../promo/price-alert/price-alert.routes.js';
+import deployRoutes from '../promo/deploy/deploy.routes.js';
 // @ts-ignore
 import resumesApp from '../curriculos/server.js';
-import { requireAuth } from '../features/auth/auth.middleware.js';
+import { requireAuth } from '../promo/auth/auth.middleware.js';
 
 declare module 'express-session' {
   interface SessionData {

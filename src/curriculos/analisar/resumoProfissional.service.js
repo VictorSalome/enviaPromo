@@ -1,5 +1,5 @@
 import { logInfo, logError } from "../utils/logger.js";
-import { calculateSimilarity } from "../utils/text-utils.js";
+import { calculateSimilarity } from "../utils/textUtils.js";
 import fs from "fs";
 import path from "path";
 
