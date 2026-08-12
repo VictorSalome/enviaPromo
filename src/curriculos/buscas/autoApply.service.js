@@ -53,17 +53,25 @@ export const executarPipeline = async ({
         continue;
       }
 
-      // 3. Extrair dados da vaga (inclui email do description)
+      // 3. Extrair dados da vaga
       const textoVaga = `${vaga.title}\n${vaga.company}\n${vaga.description || ""}`;
       const dadosVaga = await extrairDadosVaga(textoVaga);
 
-      // Email pode vir da vaga API OU do description
+      // Email: prioridade → vaga._emails (LinkedIn) → extrairDadosVaga → regex no description
       const emailFinal =
-        dadosVaga.emailContato ||
         vaga._emails?.[0] ||
+        dadosVaga.emailContato ||
         extrairEmailDoTexto(vaga.description || "");
 
-      logInfo(`Vaga: ${vaga.title} | Score: ${match.score}% | Email: ${emailFinal || "NENHUM"}`);
+      // SEM EMAIL = pula. Foco é enviar para quem tem email.
+      if (!emailFinal) {
+        resultados.stats.semEmail++;
+        resultados.skipped.push({ title: vaga.title, score: match.score, reason: "sem email" });
+        logWarn(`⏭️ Pulando (sem email): ${vaga.title} @ ${vaga.company}`);
+        continue;
+      }
+
+      logInfo(`📧 Vaga com email: ${vaga.title} | Score: ${match.score}% | Email: ${emailFinal}`);
 
       // 4. Gerar currículo
       let nomeArquivo = null;
@@ -73,48 +81,31 @@ export const executarPipeline = async ({
         if (pdfPath) {
           nomeArquivo = path.basename(pdfPath);
           resultados.stats.gerados++;
-          logInfo(`PDF gerado: ${nomeArquivo}`);
         }
       } catch (err) {
         logError(`Erro ao gerar PDF para "${vaga.title}": ${err.message}`);
       }
 
-      const resultado = {
-        title: vaga.title,
-        company: vaga.company,
-        score: match.score,
-        matches: match.matches.map((m) => m.required),
-        missing: match.missing,
-        arquivo: nomeArquivo,
-        url: vaga.url,
-        email: emailFinal,
-        status: nomeArquivo ? "curriculo_gerado" : "erro_pdf",
-      };
-
-      // 5. Enviar email
-      if (autoSend && emailFinal && nomeArquivo) {
-        try {
-          await enviarCurriculo({
-            nomeArquivo,
-            emailDestino: emailFinal,
-            vagaTitulo: vaga.title,
-          });
-          resultado.status = "enviado";
-          resultados.stats.enviados++;
-          logInfo(`✅ EMAIL ENVIADO: ${vaga.title} → ${emailFinal}`);
-        } catch (err) {
-          resultado.status = "erro_envio";
-          resultado.erroEnvio = err.message;
-          resultados.stats.erroEnvio++;
-          logError(`❌ Erro envio "${vaga.title}": ${err.message}`);
-        }
-      } else if (!emailFinal) {
-        resultado.status = "sem_email";
-        resultados.stats.semEmail++;
-        logWarn(`⚠️ Sem email: ${vaga.title}`);
+      if (!nomeArquivo) {
+        resultados.applied.push({ title: vaga.title, company: vaga.company, score: match.score, email: emailFinal, status: "erro_pdf" });
+        continue;
       }
 
-      resultados.applied.push(resultado);
+      // 5. ENVIAR EMAIL (só chega aqui se tem email + PDF)
+      try {
+        await enviarCurriculo({
+          nomeArquivo,
+          emailDestino: emailFinal,
+          vagaTitulo: vaga.title,
+        });
+        resultados.stats.enviados++;
+        logInfo(`✅ ENVIADO: ${vaga.title} → ${emailFinal}`);
+        resultados.applied.push({ title: vaga.title, company: vaga.company, score: match.score, email: emailFinal, arquivo: nomeArquivo, status: "enviado" });
+      } catch (err) {
+        resultados.stats.erroEnvio++;
+        logError(`❌ Erro envio "${vaga.title}": ${err.message}`);
+        resultados.applied.push({ title: vaga.title, company: vaga.company, score: match.score, email: emailFinal, arquivo: nomeArquivo, status: "erro_envio", erro: err.message });
+      }
     } catch (err) {
       logError(`Erro ao processar "${vaga.title}": ${err.message}`);
       resultados.erros.push({ title: vaga.title, error: err.message });
@@ -135,12 +126,21 @@ export const executarPipeline = async ({
 };
 
 /**
- * Tenta extrair email de texto livre (descrição da vaga)
+ * Extrai email de texto livre (descrição da vaga, LinkedIn post, etc.)
+ * Ignora emails de plataformas (linkedin, sentry, etc.)
  */
 function extrairEmailDoTexto(texto) {
   if (!texto) return null;
-  const match = texto.match(
-    /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/,
+  const ignoreDomains = [
+    "linkedin.com", "sentry.io", "example.com", "email.com",
+    "domain.com", "company.com", "test.com", "placeholder.com",
+  ];
+  const emails = texto.match(
+    /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g,
   );
-  return match ? match[0] : null;
+  if (!emails) return null;
+  const valido = emails.find(
+    (e) => !ignoreDomains.some((d) => e.toLowerCase().endsWith(d)),
+  );
+  return valido || null;
 }
