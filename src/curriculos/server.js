@@ -1,8 +1,6 @@
 import express from "express";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
-import path from "path";
-import { fileURLToPath } from "url";
 import config from "./config/index.js";
 import { initializeSmtpRuntimeConfig } from "./smtp/smtpConfig.service.js";
 import {
@@ -19,6 +17,8 @@ import analisarRoutes from "./analisar/analisar.routes.js";
 import testeRoutes from "./teste/teste.routes.js";
 import smtpRoutes from "./smtp/smtp.routes.js";
 import buscasRoutes from "./buscas/buscas.routes.js";
+import scraperRoutes from "./scraper/scraper.routes.js";
+import monitorRoutes from "./monitor/monitor.routes.js";
 
 const app = express();
 
@@ -27,17 +27,9 @@ await initializeSmtpRuntimeConfig();
 // Auto-start scheduler 24/7
 autoStartScheduler();
 
-// Serve static files from public directory
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-app.use(express.static(path.join(__dirname, "public")));
+// Serve CSS separado para currículo (evita conflitos) - removido: API pura
 // Expose temporary files for preview during development
 app.use("/temp", express.static(config.paths.temp));
-
-// Rota explícita para servir o frontend
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public/index.html"));
-});
 
 // Middleware de request ID
 app.use(requestIdMiddleware);
@@ -54,7 +46,7 @@ if (config.server.env === "production") {
     helmet({
       contentSecurityPolicy: false,
       crossOriginEmbedderPolicy: false,
-    }),
+    })
   );
 }
 
@@ -103,6 +95,8 @@ app.use(analisarRoutes);
 app.use(testeRoutes);
 app.use(smtpRoutes);
 app.use("/buscar-vagas", buscasRoutes);
+app.use("/scraper", scraperRoutes);
+app.use(monitorRoutes);
 
 // Middleware para rotas não encontradas
 app.use(notFoundHandler);

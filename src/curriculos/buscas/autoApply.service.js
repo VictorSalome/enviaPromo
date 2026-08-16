@@ -5,7 +5,9 @@ import { personalizarCurriculo } from "../analisar/curriculoPersonalizador.servi
 import { gerarPdfCurriculo } from "../pdf/pdfGenerator.service.js";
 import { enviarCurriculo } from "../email/email.service.js";
 import { logInfo, logError, logWarn } from "../utils/logger.js";
+import { getStats, registrarEnvio, registrarErro, registrarVaga } from "../monitor/stats.service.js";
 import path from "path";
+import fs from "fs/promises";
 
 /**
  * Pipeline: busca → match → gera currículo → envia email (se tiver email)
@@ -66,12 +68,18 @@ export const executarPipeline = async ({
       // SEM EMAIL = pula. Foco é enviar para quem tem email.
       if (!emailFinal) {
         resultados.stats.semEmail++;
-        resultados.skipped.push({ title: vaga.title, score: match.score, reason: "sem email" });
+        resultados.skipped.push({
+          title: vaga.title,
+          score: match.score,
+          reason: "sem email",
+        });
         logWarn(`⏭️ Pulando (sem email): ${vaga.title} @ ${vaga.company}`);
         continue;
       }
 
-      logInfo(`📧 Vaga com email: ${vaga.title} | Score: ${match.score}% | Email: ${emailFinal}`);
+      logInfo(
+        `📧 Vaga com email: ${vaga.title} | Score: ${match.score}% | Email: ${emailFinal}`,
+      );
 
       // 4. Gerar currículo
       let nomeArquivo = null;
@@ -87,24 +95,70 @@ export const executarPipeline = async ({
       }
 
       if (!nomeArquivo) {
-        resultados.applied.push({ title: vaga.title, company: vaga.company, score: match.score, email: emailFinal, status: "erro_pdf" });
+        resultados.applied.push({
+          title: vaga.title,
+          company: vaga.company,
+          score: match.score,
+          email: emailFinal,
+          status: "erro_pdf",
+        });
         continue;
       }
 
       // 5. ENVIAR EMAIL (só chega aqui se tem email + PDF)
       try {
-        await enviarCurriculo({
-          nomeArquivo,
-          emailDestino: emailFinal,
-          vagaTitulo: vaga.title,
-        });
+        // Carregar dados do candidato
+        const candidatoData = JSON.parse(
+          await fs.readFile(
+            path.join(process.cwd(), 'candidate-profile.json'),
+            'utf-8'
+          )
+        );
+        
+        // Construir dadosVaga completo
+        const dadosVagaCompleto = {
+          titulo: vaga.title,
+          empresa: vaga.company,
+          descricao: vaga.description || '',
+          stackTecnologica: dadosVaga.stackTecnologica || [],
+          responsabilidades: dadosVaga.responsabilidades || [],
+          requisitosObrigatorios: dadosVaga.requisitosObrigatorios || [],
+          diferenciaisDesejaveis: dadosVaga.diferenciaisDesejaveis || [],
+          emailContato: emailFinal,
+          nivel: dadosVaga.nivel || 'pleno',
+          modalidade: dadosVaga.modalidade || 'remoto',
+          localizacao: dadosVaga.localizacao || '',
+          salario: dadosVaga.salario || '',
+        };
+        
+        await enviarCurriculo(
+          emailFinal,
+          pdfPath,
+          dadosVagaCompleto,
+          candidatoData.personalInfo
+        );
         resultados.stats.enviados++;
         logInfo(`✅ ENVIADO: ${vaga.title} → ${emailFinal}`);
-        resultados.applied.push({ title: vaga.title, company: vaga.company, score: match.score, email: emailFinal, arquivo: nomeArquivo, status: "enviado" });
+        resultados.applied.push({
+          title: vaga.title,
+          company: vaga.company,
+          score: match.score,
+          email: emailFinal,
+          arquivo: nomeArquivo,
+          status: "enviado",
+        });
       } catch (err) {
         resultados.stats.erroEnvio++;
         logError(`❌ Erro envio "${vaga.title}": ${err.message}`);
-        resultados.applied.push({ title: vaga.title, company: vaga.company, score: match.score, email: emailFinal, arquivo: nomeArquivo, status: "erro_envio", erro: err.message });
+        resultados.applied.push({
+          title: vaga.title,
+          company: vaga.company,
+          score: match.score,
+          email: emailFinal,
+          arquivo: nomeArquivo,
+          status: "erro_envio",
+          erro: err.message,
+        });
       }
     } catch (err) {
       logError(`Erro ao processar "${vaga.title}": ${err.message}`);
@@ -132,15 +186,21 @@ export const executarPipeline = async ({
 function extrairEmailDoTexto(texto) {
   if (!texto) return null;
   const ignoreDomains = [
-    "linkedin.com", "sentry.io", "example.com", "email.com",
-    "domain.com", "company.com", "test.com", "placeholder.com",
+    "linkedin.com",
+    "sentry.io",
+    "example.com",
+    "email.com",
+    "domain.com",
+    "company.com",
+    "test.com",
+    "placeholder.com",
   ];
-  const emails = texto.match(
-    /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g,
-  );
+  const emails = texto.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g);
   if (!emails) return null;
   const valido = emails.find(
     (e) => !ignoreDomains.some((d) => e.toLowerCase().endsWith(d)),
   );
   return valido || null;
 }
+
+export { getStats };

@@ -1,87 +1,71 @@
-# 🎯 Promo Monitor v2.0
+# 🎯 Jenus API
 
-Monitor de promoções do Telegram para WhatsApp via CallMeBot.
+Backend geral da Jenus: API pura (JSON) que hospeda o **Promo Monitor** e o **Currículo Automatizado** em um único processo Express, com **auth geral JWT**.
 
-## ✨ Funcionalidades
+## ✨ Sistemas
 
-- 🔐 **Autenticação** - Login seguro com bcrypt
-- ⚙️ **Config Telegram** - Configure API_ID/API_HASH pelo painel
-- 📺 **Canais** - Gerencie canais para monitorar
-- 🎯 **Filtros Inteligentes** - Broad (OR) e Específico (AND)
-- 📡 **Monitor** - Controle start/stop
-- 💬 **WhatsApp** - Envio automático via CallMeBot
-- 🧠 **Deduplicação** - Por link, preço e loja
-- 🎯 **Alertas de Preço** - Notifica quando preço < alvo
-- 📊 **Estatísticas** - Dashboard com métricas
-- 💾 **Backup** - Exportar configurações
-- 🧪 **Testes** - Testar conexões
-- 🚨 **Modo Urgente** - Detecta descontos > 50%
+- 🔐 **Auth geral JWT** — access + refresh tokens (ver `docs/AUTH.md`)
+- 🎯 **Promo Monitor** — monitora promoções do Telegram e envia para WhatsApp/Discord
+- 📄 **Currículo Automatizado** — gera/envia currículos e busca vagas automaticamente
+- 📡 **Monitor** — controle start/stop de ambos os sistemas
+- 🧪 **Testes** — testar conexões Telegram, filtros e SMTP
+- 💾 **Backup** — exportar/importar configurações
 
-## 🚀 Deploy
-
-### Local (Desenvolvimento)
+## 🚀 Local (Desenvolvimento)
 
 ```bash
-# Clone
 git clone https://github.com/VictorSalome/enviaPromo.git
 cd enviaPromo
 
-# Instalar dependências
-npm install
+# Instalar (pnpm)
+pnpm install
 
-# Configurar .env
+# Configurar .env (obrigatório: JWT_ACCESS_SECRET, JWT_REFRESH_SECRET)
 cp .env.example .env
 # Edite .env com suas credenciais
 
-# Build
-npm run build
+# Build + start
+pnpm build
+pnpm start
 
-# Iniciar
-npm start
+# Dev com watch
+pnpm dev
 ```
 
-Acesse: http://localhost:3001
+Acesse: http://localhost:3001/api/health
 
-### Oracle Cloud Free Tier (Produção)
+## 🚀 Deploy
 
-Veja o guia completo em: `docs/ORACLE_CLOUD.md`
-
-**Resumo rápido:**
-
-1. Crie conta em https://www.oracle.com/cloud/free/
-2. Crie VM ARM (AMPERE) com Ubuntu 22.04
-3. SSH na VM
-4. Execute:
-
-```bash
-git clone https://github.com/VictorSalome/enviaPromo.git
-cd enviaPromo
-chmod +x scripts/oracle-deploy.sh
-./scripts/oracle-deploy.sh
-```
-
-5. Configure o `.env`
-6. Pronto! Acesse via IP público
+- **Oracle Cloud**: `pnpm deploy` (ver `docs/DEPLOY.md`)
+- **Guia completo Oracle**: `docs/ORACLE_CLOUD.md` e `docs/TUTORIAL_DEPLOY.md`
+- **Railway**: `node dist/index.js` (config em `railway.toml`)
 
 ## 📁 Estrutura
 
 ```
 src/
-├── core/           # Config, database, server, logger
-├── features/       # Auth, Channels, Filters, Monitor, WhatsApp, etc
-public/            # Frontend HTML + CSS + JS
-scripts/           # Deploy scripts
+├── apps/            # Entrypoints HTTP (auth, promo-monitor, curriculo-monitor)
+├── promo/           # Domínio Promo Monitor (TS)
+├── curriculos/      # Domínio Currículo Automatizado (JS)
+├── core/            # Config, logger, database, utils
+└── shared/          # Auth JWT, rate-limiter (compartilhado)
+docs/                # Documentação (arquitetura, auth, endpoints, deploy)
+scripts/             # Deploy scripts + pm2.config.js
 ```
+
+## 📚 Documentação
+
+| Doc | Conteúdo |
+|---|---|
+| `docs/ARQUITETURA.md` | Visão geral e princípios de design |
+| `docs/AUTH.md` | Autenticação JWT |
+| `docs/ENDPOINTS.md` | Todos os endpoints |
+| `docs/DEPLOY.md` | Deploy Oracle/PM2/Railway |
+| `docs/SCAPER_GUIDE.md` | Guia do scraper de vagas |
 
 ## 🔧 Stack
 
 - **Backend:** Node.js + Express + TypeScript
 - **Banco:** SQLite (auto-create)
-- **Frontend:** HTML + Tailwind CSS + DaisyUI
-- **Deploy:** Oracle Cloud Free Tier (ARM)
-
-## 📄 Licença
-
-MIT
-# Deploy Auto Test
-# Deploy test Tue Jun  9 14:03:37 UTC 2026
+- **Auth:** JWT (jsonwebtoken)
+- **Deploy:** Oracle Cloud Free Tier (ARM) + PM2

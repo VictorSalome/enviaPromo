@@ -23,27 +23,30 @@ const executarScraper = async () => {
   logInfo("Iniciando scraper LinkedIn...");
 
   try {
-    const { stdout, stderr } = await execAsync(
-      `python3 ${SCRAPER_PATH}`,
-      {
-        timeout: 300000, // 5 min max
-        env: {
-          ...process.env,
-          API_URL: "http://localhost:3001",
-        },
+    const { stdout, stderr } = await execAsync(`python3 ${SCRAPER_PATH}`, {
+      timeout: 300000, // 5 min max
+      env: {
+        ...process.env,
+        API_URL: "http://localhost:3001",
       },
-    );
+    });
 
     const duracao = Date.now() - inicio;
     ultimaExecucao = {
       timestamp: new Date().toISOString(),
       duracao: `${duracao}ms`,
       status: "ok",
-      output: stdout.split("\n").filter((l) => l.includes("📊") || l.includes("📤") || l.includes("✅"))[0] || "Concluído",
+      output:
+        stdout
+          .split("\n")
+          .filter(
+            (l) => l.includes("📊") || l.includes("📤") || l.includes("✅"),
+          )[0] || "Concluído",
     };
 
     logInfo(`Scraper LinkedIn finalizado em ${duracao}ms`);
-    if (stdout) logInfo(`Scraper output: ${stdout.split("\n").slice(-5).join(" | ")}`);
+    if (stdout)
+      logInfo(`Scraper output: ${stdout.split("\n").slice(-5).join(" | ")}`);
   } catch (err) {
     const duracao = Date.now() - inicio;
     ultimaExecucao = {

@@ -1,4 +1,4 @@
-// Handlers de erro global para evitar crash em erros n00e3o tratados (ex: timeout do Telegram)
+// Handlers de erro global para evitar crash em erros não tratados
 process.on('unhandledRejection', (reason, _promise) => {
   console.error('[Unhandled Rejection]', reason);
 });
@@ -6,18 +6,58 @@ process.on('uncaughtException', (err) => {
   console.error('[Uncaught Exception]', err);
 });
 
-import { app } from './core/server.js';
+import express from 'express';
+import cors from 'cors';
 import { config } from './core/config.js';
 import { initDb } from './core/database.js';
 import * as logger from './core/logger.js';
 
+import authApp from './apps/auth/index.js';
+import promoApp from './apps/promo-monitor/index.js';
+// @ts-ignore - curriculos server é JavaScript
+import curriculosApp from './apps/curriculo-monitor/index.js';
+import { requireAuth } from './promo/auth/auth.middleware.js';
+
+const app = express();
+
+app.use(
+  cors({
+    origin: true,
+    credentials: true,
+  }),
+);
+
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// ── Apps ──
+app.use('/api/auth', authApp);
+app.use('/api', promoApp);
+app.use('/api/curriculo', requireAuth, curriculosApp);
+
+// ── Health check ──
+app.get('/api/health', (_req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// ── 404 ──
+app.use((_req, res) => {
+  res.status(404).json({
+    success: false,
+    error: {
+      message: 'Rota não encontrada',
+      status: 404,
+    },
+    timestamp: new Date().toISOString(),
+  });
+});
+
 const startServer = async (): Promise<void> => {
   try {
-    // Inicializa banco de dados (cria tabelas e seed)
     await initDb();
 
     app.listen(config.PORT, () => {
-      logger.info(`🚀 Servidor rodando na porta ${config.PORT}`, 'Server');
+      logger.info(`🚀 Jenus API rodando na porta ${config.PORT}`, 'Server');
       logger.info(`📊 Ambiente: ${config.NODE_ENV}`, 'Server');
       logger.info(`💾 Banco: ${config.DATABASE_PATH}`, 'Server');
       logger.info(`👤 Admin: ${config.ADMIN_USERNAME}`, 'Server');

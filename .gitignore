@@ -6,6 +6,7 @@ dist/
 
 # Environment
 .env
+.env.production
 
 # Database
 data/*.db
@@ -15,6 +16,9 @@ data/*.db
 # Logs
 logs/
 *.log
+
+# Temp (preview de currículos)
+temp/
 
 # OS
 .DS_Store

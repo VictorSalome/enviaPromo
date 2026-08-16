@@ -107,8 +107,8 @@ export const startAuth = async (req: Request, res: Response): Promise<void> => {
 
     const phoneCodeHash = (sendCodeResult as any).phoneCodeHash;
 
-    // Guardar na memória (sessionID → {client, phoneCodeHash})
-    const sessionId = req.sessionID || 'default';
+    // Guardar na memória (userId → {client, phoneCodeHash})
+    const sessionId = (req as any).user?.userId || req.ip || 'default';
     authSessions.set(sessionId, { client, phoneCodeHash });
 
     console.log('[TelegramAuth] ✅ Código SMS enviado para', config.phone);
@@ -124,7 +124,7 @@ export const startAuth = async (req: Request, res: Response): Promise<void> => {
 export const verifyAuth = async (req: Request, res: Response): Promise<void> => {
   try {
     const { code } = req.body;
-    const sessionId = req.sessionID || 'default';
+    const sessionId = (req as any).user?.userId || req.ip || 'default';
     
     if (!code) {
       res.status(400).json({ success: false, message: 'Código é obrigatório' });

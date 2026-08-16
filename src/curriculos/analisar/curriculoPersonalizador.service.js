@@ -509,6 +509,7 @@ const filtrarExperienciasRelevantes = (experiences, dadosVaga) => {
       [...responsabilidades, ...requisitosObrigatorios].join(" "),
     );
 
+    exp.achievements = exp.achievements || [];
     exp.achievements.forEach((achievement) => {
       const achievementLower = normalizeText(achievement);
       if (

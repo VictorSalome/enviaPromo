@@ -8,1631 +8,386 @@
       href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Source+Sans+3:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
       rel="stylesheet"
     />
-    <style>
-      *,
-      *::before,
-      *::after {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-      }
-      :root {
-        --ink: #1a1a2e;
-        --ink-light: #2d2d44;
-        --ink-muted: #6b6b8a;
-        --paper: #faf9f7;
-        --paper-warm: #f5f3ef;
-        --cream: #eee9e2;
-        --gold: #c9a84c;
-        --gold-dim: #b8963f;
-        --gold-glow: rgba(201, 168, 76, 0.15);
-        --emerald: #2d8a6e;
-        --emerald-glow: rgba(45, 138, 110, 0.12);
-        --rose: #c45b5b;
-        --rose-glow: rgba(196, 91, 91, 0.1);
-        --radius: 6px;
-        --radius-lg: 12px;
-        --shadow-sm: 0 1px 3px rgba(26, 26, 46, 0.06);
-        --shadow: 0 4px 16px rgba(26, 26, 46, 0.08);
-        --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-      }
-      body {
-        font-family: "Source Sans 3", Georgia, serif;
-        background: var(--paper);
-        color: var(--ink);
-        line-height: 1.65;
-        min-height: 100vh;
-        -webkit-font-smoothing: antialiased;
-      }
-      body::before {
-        content: "";
-        position: fixed;
-        inset: 0;
-        background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
-        pointer-events: none;
-        z-index: 9999;
-      }
-      .masthead {
-        background: var(--ink);
-        color: var(--paper);
-        padding: 48px 32px 40px;
-        position: relative;
-        overflow: hidden;
-      }
-      .masthead::after {
-        content: "";
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        height: 3px;
-        background: linear-gradient(
-          90deg,
-          transparent,
-          var(--gold),
-          transparent
-        );
-      }
-      .masthead-inner {
-        max-width: 1200px;
-        margin: 0 auto;
-        display: flex;
-        align-items: flex-end;
-        justify-content: space-between;
-        gap: 32px;
-        flex-wrap: wrap;
-      }
-      .masthead h1 {
-        font-family: "Playfair Display", Georgia, serif;
-        font-size: 36px;
-        font-weight: 600;
-        letter-spacing: -0.5px;
-        line-height: 1.15;
-      }
-      .masthead h1 span {
-        color: var(--gold);
-      }
-      .masthead-sub {
-        font-size: 15px;
-        color: var(--ink-muted);
-        margin-top: 6px;
-        font-weight: 300;
-      }
-      .steps {
-        display: flex;
-        gap: 0;
-        align-self: center;
-      }
-      .step {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        padding: 10px 20px;
-        font-size: 13px;
-        font-weight: 500;
-        color: var(--ink-muted);
-        transition: color var(--transition);
-      }
-      .step + .step::before {
-        content: "";
-        position: absolute;
-        left: -2px;
-        top: 50%;
-        transform: translateY(-50%);
-        width: 1px;
-        height: 20px;
-        background: rgba(255, 255, 255, 0.12);
-      }
-      .step-num {
-        width: 26px;
-        height: 26px;
-        border-radius: 50%;
-        border: 1.5px solid rgba(255, 255, 255, 0.15);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-family: "JetBrains Mono", monospace;
-        font-size: 11px;
-        font-weight: 500;
-        transition: all var(--transition);
-      }
-      .step.active {
-        color: var(--paper);
-      }
-      .step.active .step-num {
-        background: var(--gold);
-        border-color: var(--gold);
-        color: var(--ink);
-      }
-      .step.done {
-        color: var(--emerald);
-      }
-      .step.done .step-num {
-        background: var(--emerald);
-        border-color: var(--emerald);
-        color: white;
-      }
-      .workspace {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 32px 24px 64px;
-        display: grid;
-        grid-template-columns: 380px 1fr;
-        gap: 28px;
-        align-items: start;
-      }
-      @media (max-width: 1060px) {
-        .workspace {
-          grid-template-columns: 1fr;
-        }
-        .masthead-inner {
-          flex-direction: column;
-          align-items: flex-start;
-        }
-      }
-      .panel {
-        background: white;
-        border: 1px solid var(--cream);
-        border-radius: var(--radius-lg);
-        box-shadow: var(--shadow-sm);
-        overflow: hidden;
-        transition: box-shadow var(--transition);
-        animation: fadeUp 0.4s ease;
-      }
-      .panel:hover {
-        box-shadow: var(--shadow);
-      }
-      .panel-head {
-        padding: 18px 22px;
-        border-bottom: 1px solid var(--cream);
-        display: flex;
-        align-items: center;
-        gap: 10px;
-      }
-      .panel-head h2 {
-        font-family: "Playfair Display", Georgia, serif;
-        font-size: 17px;
-        font-weight: 600;
-      }
-      .panel-head .icon {
-        width: 32px;
-        height: 32px;
-        border-radius: var(--radius);
-        background: var(--gold-glow);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: var(--gold);
-        flex-shrink: 0;
-      }
-      .panel-body {
-        padding: 22px;
-      }
-      textarea {
-        width: 100%;
-        height: 300px;
-        padding: 16px 18px;
-        border: 1.5px solid var(--cream);
-        border-radius: var(--radius);
-        font-family: "JetBrains Mono", monospace;
-        font-size: 12.5px;
-        line-height: 1.7;
-        color: var(--ink);
-        background: var(--paper);
-        resize: vertical;
-        transition: all var(--transition);
-      }
-      textarea:focus {
-        outline: none;
-        border-color: var(--gold);
-        box-shadow: 0 0 0 3px var(--gold-glow);
-        background: white;
-      }
-      textarea::placeholder {
-        color: var(--ink-muted);
-        opacity: 0.6;
-      }
-      .btn {
-        padding: 12px 24px;
-        font-family: "Source Sans 3", sans-serif;
-        font-size: 13.5px;
-        font-weight: 600;
-        border: none;
-        border-radius: var(--radius);
-        cursor: pointer;
-        transition: all var(--transition);
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        letter-spacing: 0.2px;
-      }
-      .btn-generate {
-        width: 100%;
-        background: var(--ink);
-        color: var(--paper);
-        margin-top: 14px;
-      }
-      .btn-generate:hover:not(:disabled) {
-        background: var(--ink-light);
-        box-shadow: 0 4px 12px rgba(26, 26, 46, 0.2);
-        transform: translateY(-1px);
-      }
-      .btn-generate:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-      }
-      .btn-gold {
-        background: var(--gold);
-        color: var(--ink);
-      }
-      .btn-gold:hover:not(:disabled) {
-        background: var(--gold-dim);
-        box-shadow: 0 4px 12px var(--gold-glow);
-        transform: translateY(-1px);
-      }
-      .btn-gold:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-      }
-      .btn-ghost {
-        background: transparent;
-        color: var(--ink-muted);
-        border: 1.5px solid var(--cream);
-      }
-      .btn-ghost:hover {
-        background: var(--paper-warm);
-        border-color: var(--ink-muted);
-        color: var(--ink);
-      }
-      .btn-sm {
-        padding: 9px 16px;
-        font-size: 12.5px;
-      }
-      .btn-block {
-        width: 100%;
-      }
-      .btn + .btn {
-        margin-top: 10px;
-      }
-      .btn-actions {
-        display: flex;
-        gap: 10px;
-        margin-top: 16px;
-      }
-      .btn-actions .btn {
-        flex: 1;
-      }
-      .msg {
-        padding: 12px 16px;
-        border-radius: var(--radius);
-        margin-top: 14px;
-        font-size: 13px;
-        font-weight: 500;
-        display: none;
-        animation: fadeUp 0.3s ease;
-      }
-      @keyframes fadeUp {
-        from {
-          opacity: 0;
-          transform: translateY(6px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-      .msg-err {
-        background: var(--rose-glow);
-        color: var(--rose);
-        border: 1px solid rgba(196, 91, 91, 0.2);
-      }
-      .msg-ok {
-        background: var(--emerald-glow);
-        color: var(--emerald);
-        border: 1px solid rgba(45, 138, 110, 0.2);
-      }
-      .loader {
-        text-align: center;
-        padding: 48px 20px;
-        display: none;
-      }
-      .loader-ring {
-        width: 40px;
-        height: 40px;
-        border: 3px solid var(--cream);
-        border-top-color: var(--gold);
-        border-radius: 50%;
-        animation: spin 0.7s linear infinite;
-        margin: 0 auto 14px;
-      }
-      @keyframes spin {
-        to {
-          transform: rotate(360deg);
-        }
-      }
-      .loader-text {
-        color: var(--ink-muted);
-        font-size: 13px;
-        font-style: italic;
-      }
-      .empty {
-        text-align: center;
-        padding: 72px 24px;
-        color: var(--ink-muted);
-      }
-      .empty-icon {
-        width: 56px;
-        height: 56px;
-        margin: 0 auto 18px;
-        border: 2px dashed var(--cream);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: var(--ink-muted);
-        opacity: 0.5;
-      }
-      .empty h3 {
-        font-family: "Playfair Display", Georgia, serif;
-        font-size: 17px;
-        font-weight: 500;
-        color: var(--ink);
-        margin-bottom: 6px;
-      }
-      .empty p {
-        font-size: 13.5px;
-      }
-      .preview-zone {
-        display: none;
-      }
-      .preview-meta {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding-bottom: 14px;
-        margin-bottom: 14px;
-        border-bottom: 1px solid var(--cream);
-      }
-      .preview-meta h3 {
-        font-family: "Playfair Display", Georgia, serif;
-        font-size: 16px;
-        font-weight: 600;
-      }
-      .preview-meta small {
-        color: var(--ink-muted);
-        font-size: 12.5px;
-        display: block;
-        margin-top: 3px;
-      }
-      .badge {
-        padding: 5px 12px;
-        border-radius: 20px;
-        font-size: 11.5px;
-        font-weight: 600;
-        letter-spacing: 0.3px;
-      }
-      .badge-gold {
-        background: var(--gold-glow);
-        color: var(--gold-dim);
-      }
-      .pdf-frame {
-        width: 100%;
-        height: 650px;
-        border: 1.5px solid var(--cream);
-        border-radius: var(--radius);
-        background: #e8e6e1;
-      }
-      .action-box {
-        margin-top: 18px;
-        padding: 18px;
-        background: var(--paper);
-        border: 1.5px solid var(--cream);
-        border-radius: var(--radius-lg);
-        display: none;
-      }
-      .action-box.show {
-        display: block;
-        animation: fadeUp 0.3s ease;
-      }
-      .action-box h4 {
-        font-family: "Playfair Display", Georgia, serif;
-        font-size: 15px;
-        font-weight: 600;
-        margin-bottom: 6px;
-      }
-      .action-box p {
-        font-size: 13px;
-        color: var(--ink-muted);
-        margin-bottom: 14px;
-      }
-      .email-prompt {
-        margin-bottom: 14px;
-        padding: 14px;
-        border: 1.5px solid var(--gold);
-        border-radius: var(--radius);
-        background: var(--gold-glow);
-      }
-      .email-prompt label {
-        display: block;
-        font-size: 11px;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.8px;
-        color: var(--gold-dim);
-        margin-bottom: 8px;
-      }
-      .email-input {
-        width: 100%;
-        border: 1.5px solid var(--gold);
-        border-radius: var(--radius);
-        padding: 10px 14px;
-        font-family: "Source Sans 3", sans-serif;
-        font-size: 14px;
-        color: var(--ink);
-        background: white;
-        transition: all var(--transition);
-      }
-      .email-input:focus {
-        outline: none;
-        box-shadow: 0 0 0 3px var(--gold-glow);
-      }
-      .email-input.ok {
-        border-color: var(--emerald);
-        box-shadow: 0 0 0 3px var(--emerald-glow);
-      }
-      .email-input.bad {
-        border-color: var(--rose);
-        box-shadow: 0 0 0 3px var(--rose-glow);
-      }
-      .email-hint {
-        margin-top: 6px;
-        font-size: 12px;
-        color: var(--gold-dim);
-      }
-      .email-hint.ok {
-        color: var(--emerald);
-      }
-      .email-hint.bad {
-        color: var(--rose);
-      }
-      .results-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 10px;
-      }
-      .result-cell {
-        padding: 14px;
-        background: var(--paper);
-        border-radius: var(--radius);
-        border: 1px solid var(--cream);
-      }
-      .result-cell strong {
-        display: block;
-        font-size: 10.5px;
-        text-transform: uppercase;
-        letter-spacing: 0.8px;
-        color: var(--ink-muted);
-        margin-bottom: 4px;
-      }
-      .result-cell span {
-        font-size: 14px;
-        font-weight: 500;
-      }
-      .skills-row {
-        margin-top: 14px;
-      }
-      .skills-row strong {
-        display: block;
-        font-size: 10.5px;
-        text-transform: uppercase;
-        letter-spacing: 0.8px;
-        color: var(--ink-muted);
-        margin-bottom: 8px;
-      }
-      .skill-pill {
-        display: inline-block;
-        padding: 4px 11px;
-        background: var(--ink);
-        color: var(--paper);
-        border-radius: 20px;
-        font-size: 11.5px;
-        font-weight: 500;
-        margin: 0 4px 6px 0;
-        letter-spacing: 0.2px;
-      }
-      .success-zone {
-        display: none;
-        text-align: center;
-        padding: 32px 0;
-      }
-      .success-circle {
-        width: 72px;
-        height: 72px;
-        border-radius: 50%;
-        background: var(--emerald);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 auto 18px;
-        animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-      }
-      @keyframes popIn {
-        from {
-          transform: scale(0);
-        }
-        to {
-          transform: scale(1);
-        }
-      }
-      .success-circle svg {
-        width: 32px;
-        height: 32px;
-        color: white;
-      }
-      .success-zone h3 {
-        font-family: "Playfair Display", Georgia, serif;
-        font-size: 22px;
-        font-weight: 600;
-        margin-bottom: 6px;
-      }
-      .success-zone p {
-        color: var(--ink-muted);
-        font-size: 14px;
-      }
-      .footer-nav {
-        margin-top: 20px;
-        padding-top: 16px;
-        border-top: 1px solid var(--cream);
-        display: flex;
-        gap: 10px;
-      }
-      .footer-nav a {
-        font-size: 12.5px;
-        color: var(--ink-muted);
-        text-decoration: none;
-        transition: color var(--transition);
-      }
-      .footer-nav a:hover {
-        color: var(--gold);
-      }
-      /* ── Busca de Vagas ── */
-      .search-section {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 0 24px 64px;
-      }
-      .search-bar {
-        display: flex;
-        gap: 10px;
-        margin-bottom: 20px;
-      }
-      .search-bar input {
-        flex: 1;
-        padding: 12px 16px;
-        border: 1.5px solid var(--cream);
-        border-radius: var(--radius);
-        font-family: "Source Sans 3", sans-serif;
-        font-size: 14px;
-        background: white;
-        transition: all var(--transition);
-      }
-      .search-bar input:focus {
-        outline: none;
-        border-color: var(--gold);
-        box-shadow: 0 0 0 3px var(--gold-glow);
-      }
-      .job-card {
-        background: white;
-        border: 1px solid var(--cream);
-        border-radius: var(--radius-lg);
-        padding: 18px 20px;
-        margin-bottom: 12px;
-        display: grid;
-        grid-template-columns: 1fr auto;
-        gap: 16px;
-        align-items: center;
-        transition: all var(--transition);
-        animation: fadeUp 0.3s ease;
-      }
-      .job-card:hover {
-        box-shadow: var(--shadow);
-        border-color: var(--gold);
-      }
-      .job-title {
-        font-family: "Playfair Display", Georgia, serif;
-        font-size: 16px;
-        font-weight: 600;
-        color: var(--ink);
-        margin-bottom: 4px;
-      }
-      .job-company {
-        font-size: 13px;
-        color: var(--ink-muted);
-      }
-      .job-meta {
-        display: flex;
-        gap: 12px;
-        margin-top: 8px;
-        font-size: 12px;
-        color: var(--ink-muted);
-      }
-      .job-meta span {
-        display: flex;
-        align-items: center;
-        gap: 4px;
-      }
-      .job-score {
-        text-align: right;
-      }
-      .score-circle {
-        width: 52px;
-        height: 52px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-family: "JetBrains Mono", monospace;
-        font-size: 15px;
-        font-weight: 600;
-        margin: 0 auto 6px;
-      }
-      .score-high {
-        background: var(--emerald-glow);
-        color: var(--emerald);
-        border: 2px solid var(--emerald);
-      }
-      .score-mid {
-        background: var(--gold-glow);
-        color: var(--gold-dim);
-        border: 2px solid var(--gold);
-      }
-      .score-low {
-        background: var(--rose-glow);
-        color: var(--rose);
-        border: 2px solid var(--rose);
-      }
-      .job-actions {
-        display: flex;
-        gap: 6px;
-        justify-content: flex-end;
-        margin-top: 8px;
-      }
-      .job-tags {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 4px;
-        margin-top: 8px;
-      }
-      .job-tag {
-        padding: 2px 8px;
-        background: var(--paper);
-        border: 1px solid var(--cream);
-        border-radius: 4px;
-        font-size: 11px;
-        color: var(--ink-muted);
-      }
-      .search-empty {
-        text-align: center;
-        padding: 48px 20px;
-        color: var(--ink-muted);
-      }
-      .search-empty h3 {
-        font-family: "Playfair Display", Georgia, serif;
-        font-size: 17px;
-        color: var(--ink);
-        margin-bottom: 6px;
-      }
-      .search-summary {
-        font-size: 13px;
-        color: var(--ink-muted);
-        margin-bottom: 16px;
-        padding-bottom: 12px;
-        border-bottom: 1px solid var(--cream);
-      }
-      /* ── Scheduler Monitor ── */
-      .monitor-grid {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 12px;
-        margin-bottom: 18px;
-      }
-      .monitor-stat {
-        padding: 14px;
-        background: var(--paper);
-        border-radius: var(--radius);
-        border: 1px solid var(--cream);
-        text-align: center;
-      }
-      .monitor-stat .val {
-        font-family: "JetBrains Mono", monospace;
-        font-size: 22px;
-        font-weight: 600;
-        color: var(--ink);
-      }
-      .monitor-stat .label {
-        font-size: 11px;
-        text-transform: uppercase;
-        letter-spacing: 0.6px;
-        color: var(--ink-muted);
-        margin-top: 4px;
-      }
-      .monitor-status {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        padding: 10px 14px;
-        background: var(--paper);
-        border-radius: var(--radius);
-        border: 1px solid var(--cream);
-        margin-bottom: 14px;
-        font-size: 13px;
-      }
-      .monitor-dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        flex-shrink: 0;
-      }
-      .monitor-dot.on {
-        background: var(--emerald);
-        box-shadow: 0 0 6px var(--emerald);
-      }
-      .monitor-dot.off {
-        background: var(--rose);
-      }
-      .monitor-actions {
-        display: flex;
-        gap: 8px;
-      }
-      @media (max-width: 768px) {
-        .monitor-grid { grid-template-columns: 1fr 1fr; }
-      }
-      /* ── LinkedIn ── */
-      .linkedin-area {
-        margin-top: 16px;
-        padding-top: 16px;
-        border-top: 1px solid var(--cream);
-      }
-      .linkedin-area h4 {
-        font-family: "Playfair Display", Georgia, serif;
-        font-size: 15px;
-        margin-bottom: 8px;
-      }
-      .linkedin-area textarea {
-        height: 120px;
-        font-family: "JetBrains Mono", monospace;
-        font-size: 11px;
-      }
-      .linkedin-results { margin-top: 12px; }
-    </style>
+    <link rel="stylesheet" href="/style.css">
   </head>
   <body>
-    <header class="masthead">
-      <div class="masthead-inner">
-        <div>
-          <h1>Currículos <span>Automatizados</span></h1>
-          <p class="masthead-sub">
-            Gere currículos personalizados a partir de vagas e envie por e-mail
-          </p>
-        </div>
-        <nav class="steps">
-          <div class="step active" id="step1">
-            <span class="step-num">1</span><span>Redigir</span>
-          </div>
-          <div class="step" id="step2">
-            <span class="step-num">2</span><span>Revisar</span>
-          </div>
-          <div class="step" id="step3">
-            <span class="step-num">3</span><span>Enviar</span>
-          </div>
-        </nav>
+    <!-- Navigation Menu -->
+    <nav style="background: linear-gradient(135deg, #1a1a2e 0%, #2d2d44 100%); padding: 16px 32px; display: flex; align-items: center; gap: 24px; flex-wrap: wrap;">
+      <div style="display: flex; align-items: center; gap: 12px; flex: 1;">
+        <span style="font-size: 24px;">📄</span>
+        <h1 style="margin: 0; font-family: 'Playfair Display', serif; font-size: 20px; color: white;">
+          Currículos
+        </h1>
       </div>
-    </header>
+      <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+        <a href="/envia-curriculo" class="nav-link" style="
+          padding: 10px 20px;
+          border-radius: 8px;
+          font-size: 14px;
+          font-weight: 500;
+          text-decoration: none;
+          color: white;
+          background: rgba(255,255,255,0.1);
+          border: 1px solid rgba(255,255,255,0.1);
+          transition: all 0.25s;
+        ">🎯 Dashboard</a>
+        <a href="/envia-curriculo/monitor" class="nav-link" style="
+          padding: 10px 20px;
+          border-radius: 8px;
+          font-size: 14px;
+          font-weight: 500;
+          text-decoration: none;
+          color: white;
+          background: rgba(255,255,255,0.1);
+          border: 1px solid rgba(255,255,255,0.1);
+          transition: all 0.25s;
+        ">📊 Monitoramento</a>
+        <a href="/envia-curriculo/smtp-config" class="nav-link" style="
+          padding: 10px 20px;
+          border-radius: 8px;
+          font-size: 14px;
+          font-weight: 500;
+          text-decoration: none;
+          color: white;
+          background: rgba(255,255,255,0.1);
+          border: 1px solid rgba(255,255,255,0.1);
+          transition: all 0.25s;
+        ">⚙️ Configurar SMTP</a>
+        <a href="/envia-promo" class="nav-link" style="
+          padding: 10px 20px;
+          border-radius: 8px;
+          font-size: 14px;
+          font-weight: 500;
+          text-decoration: none;
+          color: #c9a84c;
+          background: white;
+          border: 1px solid white;
+        ">-← Voltar ao Promo</a>
+      </div>
+    </nav>
+
+    <div class="masthead">
+      <div class="header-content">
+        <h1>
+          🎯 <span>Dashboard de Candidaturas</span>
+        </h1>
+        <p class="masthead-sub">
+          Analise vagas, gere currículos personalizados e envie automaticamente
+        </p>
+      </div>
+    </div>
+
     <main class="workspace">
-      <section>
-        <div class="panel" id="formCard">
-          <div class="panel-head">
-            <div class="icon">
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <path
-                  d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
-                />
-                <polyline points="14 2 14 8 20 8" />
-                <line x1="16" y1="13" x2="8" y2="13" />
-                <line x1="16" y1="17" x2="8" y2="17" />
-              </svg>
-            </div>
-            <h2>Texto da Vaga</h2>
-          </div>
+      <div class="main-grid">
+        <!-- Quick Stats -->
+        <div class="panel" style="grid-column: span 1;">
           <div class="panel-body">
-            <form id="vagaForm">
-              <textarea
-                id="vagaText"
-                placeholder="Cole o texto completo da vaga de emprego...
-
-Vaga: Desenvolvedor React Native
-Empresa: MobileTech
-E-mail: rh@mobiletech.com.br
-Localização: Remoto
-Nível: Pleno
-
-Responsabilidades:
-• Desenvolver apps mobile com React Native
-• Implementar integrações com APIs REST
-
-Requisitos:
-• Experiência com React Native e TypeScript
-• Conhecimento em Node.js"
-                required
-              ></textarea
-              ><button type="submit" class="btn btn-generate" id="submitBtn">
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
-                  <path
-                    d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
-                  />
-                  <polyline points="14 2 14 8 20 8" />
-                </svg>
-                Gerar Currículo
-              </button>
-            </form>
-            <button
-              type="button"
-              class="btn btn-ghost btn-sm btn-block"
-              id="smtpTestBtn"
-              onclick="testSmtpConnection()"
-            >
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                <polyline points="22 4 12 14.01 9 11.01" />
-              </svg>
-              Testar Conexão SMTP</button
-            ><button
-              type="button"
-              class="btn btn-ghost btn-sm btn-block"
-              onclick="goToSmtpConfig()"
-            >
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <circle cx="12" cy="12" r="3" />
-                <path
-                  d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"
-                />
-              </svg>
-              Configurar SMTP
-            </button>
-            <div class="loader" id="loading">
-              <div class="loader-ring"></div>
-              <div class="loader-text">
-                Analisando vaga e gerando currículo…
+            <h3 style="margin-bottom: 16px;">📈 Status Rápido</h3>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
+              <div style="background: var(--paper-warm); padding: 20px; border-radius: var(--radius-lg); text-align: center;">
+                <div id="quick-vagas" style="font-size: 28px; font-weight: 700; color: var(--primary);">0</div>
+                <div style="font-size: 13px; color: var(--ink-muted);">Vagas Recentes</div>
+              </div>
+              <div style="background: var(--paper-warm); padding: 20px; border-radius: var(--radius-lg); text-align: center;">
+                <div id="quick-enviados" style="font-size: 28px; font-weight: 700; color: var(--success);">0</div>
+                <div style="font-size: 13px; color: var(--ink-muted);">Enviados</div>
               </div>
             </div>
-            <div class="msg msg-err" id="errorMessage"></div>
-            <div class="msg msg-ok" id="successMessage"></div>
           </div>
         </div>
-        <div
-          class="panel"
-          id="resultsCard"
-          style="display: none; margin-top: 20px"
-        >
-          <div class="panel-head">
-            <div
-              class="icon"
-              style="background: var(--emerald-glow); color: var(--emerald)"
-            >
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                <polyline points="22 4 12 14.01 9 11.01" />
-              </svg>
-            </div>
-            <h2>Resultado da Análise</h2>
-          </div>
-          <div class="panel-body" id="resultsContent"></div>
-        </div>
-        <div class="footer-nav">
-          <a href="/envia-promo">← Promo Monitor</a
-          ><a href="/envia-curriculo/smtp-config">Config SMTP →</a>
-        </div>
-      </section>
-      <section>
+
+        <!-- Main Content -->
         <div class="panel">
           <div class="panel-head">
-            <div
-              class="icon"
-              style="background: var(--emerald-glow); color: var(--emerald)"
-            >
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                <circle cx="12" cy="12" r="3" />
-              </svg>
-            </div>
-            <h2>Pré-visualização</h2>
+            <div class="icon">📄</div>
+            <h2>Analisar Vaga</h2>
           </div>
           <div class="panel-body">
-            <div class="empty" id="emptyState">
-              <div class="empty-icon">
-                <svg
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="1.5"
-                >
-                  <path
-                    d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
-                  />
-                  <polyline points="14 2 14 8 20 8" />
-                </svg>
-              </div>
-              <h3>Nenhum currículo gerado</h3>
-              <p>Cole uma vaga à esquerda e clique em "Gerar Currículo".</p>
+            <textarea 
+              id="vaga-input" 
+              placeholder="Cole a descrição da vaga aqui...
+Exemplo:
+Título: Desenvolvedor React
+Empresa: Tech Corp
+Descrição: Procuramos desenvolvedor React experiente...
+Requisitos: React, TypeScript, Node.js, SQL
+E-mail: rh@techcorp.com"
+            ></textarea>
+            
+            <div class="action-buttons">
+              <button class="btn btn-primary" id="generar-btn" onclick="gerarCurriculo()">
+                <span id="btn-text">Gerar Currículo</span>
+                <span class="loader" id="loader">
+                  <span class="loader-ring"></span>
+                  <span class="loader-text">Processando...</span>
+                </span>
+              </button>
+              <button class="btn btn-gold" id="auto-apply-btn" onclick="abrirAutoApply()" style="display: none;">
+                🤖 Auto-Apply
+              </button>
             </div>
-            <div class="preview-zone" id="previewSection">
-              <div class="preview-meta">
-                <div>
-                  <h3 id="previewTitle">Currículo Gerado</h3>
-                  <small id="previewSubtitle"></small>
-                </div>
-                <span class="badge badge-gold" id="relevanceBadge"></span>
-              </div>
-              <iframe
-                id="pdfViewer"
-                class="pdf-frame"
-                src=""
-                frameborder="0"
-              ></iframe>
-              <div class="action-box show" id="actionPanel">
-                <h4>Próximo passo</h4>
-                <p>
-                  Revise o currículo. Se estiver satisfeito, autorize o envio.
-                </p>
-                <div class="btn-actions">
-                  <button class="btn btn-ghost btn-sm" onclick="regenerate()">
-                    <svg
-                      width="14"
-                      height="14"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                    >
-                      <polyline points="23 4 23 10 17 10" />
-                      <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
-                    </svg>
-                    Refazer</button
-                  ><button class="btn btn-ghost btn-sm" onclick="downloadPDF()">
-                    <svg
-                      width="14"
-                      height="14"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                    >
-                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                      <polyline points="7 10 12 15 17 10" />
-                      <line x1="12" y1="15" x2="12" y2="3" />
-                    </svg>
-                    Baixar PDF</button
-                  ><button
-                    class="btn btn-gold btn-sm"
-                    id="sendBtn"
-                    onclick="sendEmail()"
-                  >
-                    <svg
-                      width="14"
-                      height="14"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                    >
-                      <line x1="22" y1="2" x2="11" y2="13" />
-                      <polygon points="22 2 15 22 11 13 2 9 22 2" />
-                    </svg>
-                    Enviar
-                  </button>
-                </div>
-              </div>
-            </div>
-            <div class="success-zone" id="successSection">
-              <div class="success-circle">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2.5"
-                >
-                  <polyline points="20 6 9 17 4 12" />
-                </svg>
-              </div>
-              <h3>Currículo Enviado</h3>
-              <p id="sentDetails"></p>
-              <div
-                class="btn-actions"
-                style="margin-top: 20px; justify-content: center"
-              >
-                <button class="btn btn-ghost" onclick="resetAll()">
-                  <svg
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                  >
-                    <polyline points="23 4 23 10 17 10" />
-                    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
-                  </svg>
-                  Nova Vaga
-                </button>
-              </div>
-            </div>
+
+            <div id="status-messages"><div id="messages"></div></div>
           </div>
         </div>
-      </section>
+
+        <!-- Preview Sidebar -->
+        <div class="panel" id="preview-panel" style="display: none;">
+          <div class="panel-head">
+            <div class="icon">🖼️</div>
+            <h2>Preview do Currículo</h2>
+          </div>
+          <div class="panel-body">
+            <div id="preview-content" class="preview-section"></div>
+          </div>
+        </div>
+      </div>
     </main>
-    <!-- ── Busca de Vagas ── -->
-    <section class="search-section">
-      <div class="panel">
-        <div class="panel-head">
-          <div
-            class="icon"
-            style="background: var(--gold-glow); color: var(--gold)"
-          >
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <circle cx="11" cy="11" r="8" />
-              <line x1="21" y1="21" x2="16.65" y2="16.65" />
-            </svg>
-          </div>
-          <h2>Buscar Vagas Automaticamente</h2>
+
+    <!-- Modal de Envio -->
+    <div id="send-modal" class="modal" style="display: none;">
+      <div class="modal-content" style="
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 20px 60px rgba(26, 26, 46, 0.3);
+        overflow: hidden;
+        max-width: 480px;
+        margin: 0 auto;
+      ">
+        <div class="modal-head" style="padding: 20px 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--cream);">
+          <h3>📧 Enviar Currículo</h3>
+          <button onclick="closeModal()" class="modal-close" style="
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: var(--ink-muted);
+          ">✕</button>
         </div>
-        <div class="panel-body">
-          <div class="search-bar">
-            <input
-              type="text"
-              id="searchInput"
-              placeholder="Ex: react, node, typescript, full stack"
-            />
-            <button
-              class="btn btn-gold btn-sm"
-              id="searchBtn"
-              onclick="buscarVagas()"
-            >
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <circle cx="11" cy="11" r="8" />
-                <line x1="21" y1="21" x2="16.65" y2="16.65" />
-              </svg>
-              Buscar
-            </button>
+        <div class="modal-body" style="padding: 24px;">
+          <div style="margin-bottom: 16px;">
+            <label for="email-destino" style="display: block; margin-bottom: 8px; font-size: 13px; font-weight: 500;">Email do destinatário</label>
+            <input type="email" id="email-destino" class="email-input" placeholder="exemplo@email.com" />
           </div>
-          <div class="search-empty" id="searchEmpty">
-            <svg
-              width="32"
-              height="32"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.5"
-              style="margin-bottom: 12px; opacity: 0.4"
-            >
-              <circle cx="11" cy="11" r="8" />
-              <line x1="21" y1="21" x2="16.65" y2="16.65" />
-            </svg>
-            <h3>Busca automática de vagas</h3>
-            <p>
-              Digite tecnologias e clique em Buscar. O sistema encontra vagas,
-              calcula compatibilidade e gera currículos personalizados.
-            </p>
+          <div style="margin-bottom: 16px;">
+            <label for="vaga-titulo" style="display: block; margin-bottom: 8px; font-size: 13px; font-weight: 500;">Título da vaga</label>
+            <input type="text" id="vaga-titulo" placeholder="Desenvolvedor React" />
           </div>
-          <div id="searchResults" style="display: none"></div>
-          <div class="loader" id="searchLoading" style="display: none">
-            <div class="loader-ring"></div>
-            <div class="loader-text">Buscando vagas em 3 fontes…</div>
-          </div>
+        </div>
+        <div class="modal-footer" style="padding: 16px 24px; border-top: 1px solid var(--cream); display: flex; gap: 12px; justify-content: flex-end;">
+          <button onclick="closeModal()" class="btn btn-ghost">Cancelar</button>
+          <button class="btn btn-primary" onclick="enviarCurriculo()">Enviar</button>
         </div>
       </div>
-    </section>
-    <!-- ── Monitor 24/7 + LinkedIn ── -->
-    <section class="search-section" style="padding-top:0">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start">
-        <!-- Scheduler Monitor -->
-        <div class="panel">
-          <div class="panel-head">
-            <div class="icon" style="background:var(--emerald-glow);color:var(--emerald)">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            </div>
-            <h2>Monitor 24/7</h2>
+    </div>
+
+    <!-- Modal de Auto-Apply -->
+    <div id="auto-apply-modal" class="modal" style="display: none;">
+      <div class="modal-content" style="
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 20px 60px rgba(26, 26, 46, 0.3);
+        overflow: hidden;
+        max-width: 500px;
+        margin: 0 auto;
+      ">
+        <div class="modal-head" style="padding: 20px 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--cream);">
+          <h3>🤖 Auto-Apply</h3>
+          <button onclick="fecharAutoApply()" class="modal-close" style="
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: var(--inkmuted);
+          ">✕</button>
+        </div>
+        <div class="modal-body" style="padding: 24px;">
+          <div style="margin-bottom: 16px;">
+            <label for="keywords" style="display: block; margin-bottom: 8px; font-size: 13px; font-weight: 500;">Palavras-chave</label>
+            <input type="text" id="keywords" class="email-input" placeholder="react, javascript, typescript" value="react, javascript, typescript, node.js" />
           </div>
-          <div class="panel-body">
-            <div class="monitor-status" id="monitorStatus">
-              <span class="monitor-dot" id="monitorDot"></span>
-              <span id="monitorText">Carregando…</span>
+          <div style="margin-bottom: 16px;">
+            <label for="min-score" style="display: block; margin-bottom: 8px; font-size: 13px; font-weight: 500;">Score Mínimo (%)</label>
+            <input type="number" id="min-score" min="0" max="100" class="email-input" value="60" style="width: 100px;" />
+          </div>
+          <div id="auto-apply-status" style="padding: 12px; border-radius: var(--radius); font-size: 14px; display: none;"></div>
+          <div id="auto-apply-results" style="margin-top: 20px; display: none;">
+            <h4 style="font-size: 14px; margin-bottom: 12px;">📊 Resultados</h4>
+            <div id="auto-apply-stats" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 16px;">
+              <div style="background: var(--paper-warm); padding: 12px; border-radius: var(--radius); text-align: center;">
+                <div id="ar-qualificados" style="font-size: 24px; font-weight: 600; color: var(--primary);">0</div>
+                <div style="font-size: 11px; color: var(--inkmuted);">Qualificados</div>
+              </div>
+              <div style="background: var(--paper-warm); padding: 12px; border-radius: var(--radius); text-align: center;">
+                <div id="ar-encontrados" style="font-size: 24px; font-weight: 600; color: var(--success);">0</div>
+                <div style="font-size: 11px; color: var(--inkmuted);">Encontrados</div>
+              </div>
             </div>
-            <div class="monitor-grid">
-              <div class="monitor-stat"><div class="val" id="monTotal">-</div><div class="label">Total</div></div>
-              <div class="monitor-stat"><div class="val" id="monCompat" style="color:var(--emerald)">-</div><div class="label">Compatíveis</div></div>
-              <div class="monitor-stat"><div class="val" id="monEnv" style="color:var(--gold)">-</div><div class="label">Enviados</div></div>
-              <div class="monitor-stat"><div class="val" id="monErro" style="color:var(--rose)">-</div><div class="label">Erros</div></div>
-            </div>
-            <div class="monitor-actions">
-              <button class="btn btn-ghost btn-sm" onclick="schedulerStatus()">Atualizar</button>
-              <button class="btn btn-ghost btn-sm" id="schedulerToggle" onclick="toggleScheduler()">Iniciar</button>
-              <button class="btn btn-gold btn-sm" onclick="schedulerRunNow()">Executar Agora</button>
-            </div>
+            <div id="auto-apply-list" style="max-height: 250px; overflow-y: auto;"></div>
           </div>
         </div>
-        <!-- LinkedIn Parser -->
-        <div class="panel">
-          <div class="panel-head">
-            <div class="icon" style="background:var(--gold-glow);color:var(--gold)">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
-            </div>
-            <h2>LinkedIn Parser</h2>
-          </div>
-          <div class="panel-body">
-            <p style="font-size:13px;color:var(--ink-muted);margin-bottom:12px">Cole o HTML de busca do LinkedIn (Ctrl+U ou inspetor). O sistema extrai vagas com email automaticamente.</p>
-            <textarea id="linkedinHtml" placeholder="Cole aqui o HTML da busca do LinkedIn...&#10;&#10;Ex: https://linkedin.com/search/results/content/?keywords=Vaga+Desenvolvedor+Email"></textarea>
-            <div style="display:flex;gap:8px;margin-top:10px">
-              <button class="btn btn-gold btn-sm" onclick="parseLinkedIn()" style="flex:1">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
-                Parsear HTML
-              </button>
-            </div>
-            <div id="linkedinResults" class="linkedin-results"></div>
-          </div>
+        <div class="modal-footer" style="padding: 16px 24px; border-top: 1px solid var(--cream); display: flex; gap: 12px; justify-content: flex-end;">
+          <button class="btn btn-ghost" onclick="fecharAutoApply()">Fechar</button>
         </div>
       </div>
-    </section>
+    </div>
+
     <script>
-      let currentPdf = null,
-        currentEmail = null,
-        currentVaga = null;
-      document
-        .getElementById("vagaForm")
-        .addEventListener("submit", async function (e) {
-          e.preventDefault();
-          const t = document.getElementById("vagaText").value.trim();
-          if (!t) {
-            showMessage("error", "Insira o texto da vaga.");
-            return;
-          }
-          setLoading(true);
-          hideMessages();
-          try {
-            const r = await fetch("/api/curriculo/gerar-curriculo", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ vaga: t }),
-            });
-            const d = await r.json();
-            if (!r.ok)
-              throw new Error(d.error?.message || "Erro ao gerar currículo");
-            currentPdf = d.curriculoGerado;
-            currentEmail = d.emailDestino;
-            currentVaga = d.vaga;
-            updateSteps(2);
-            showPreview(d);
-          } catch (e) {
-            showMessage("error", e.message);
-          } finally {
-            setLoading(false);
-          }
-        });
-      async function sendEmail() {
-        if (!currentPdf) {
-          showMessage("error", "Gere o currículo antes de enviar.");
-          return;
-        }
-        if (!currentEmail) {
-          const em = getManualEmail();
-          if (!em) return;
-          currentEmail = em;
-        }
-        const b = document.getElementById("sendBtn");
-        b.disabled = true;
-        b.innerHTML =
-          '<div class="loader-ring" style="width:14px;height:14px;border-width:2px;margin:0"></div>';
+      // Estado
+      let currriculoGerado = null;
+      let autoApplyExecutando = false;
+
+      // Carregar dados rápidos
+      async function carregarQuickStats() {
         try {
-          const r = await fetch("/api/curriculo/enviar-curriculo", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              nomeArquivo: currentPdf,
-              emailDestino: currentEmail,
-              vagaTitulo: currentVaga,
-            }),
-          });
-          const d = await r.json();
-          if (!r.ok) throw new Error(d.error?.message || "Erro ao enviar");
-          updateSteps(3);
-          showSuccess(d);
-        } catch (e) {
-          showMessage("error", e.message);
-          b.disabled = false;
-          b.innerHTML =
-            '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Enviar';
-        }
-      }
-      async function testSmtpConnection() {
-        const b = document.getElementById("smtpTestBtn"),
-          o = b.innerHTML;
-        b.disabled = true;
-        b.textContent = "Testando…";
-        hideMessages();
-        try {
-          const r = await fetch("/api/curriculo/smtp-test");
-          const d = await r.json();
-          showMessage(
-            r.ok && d.success ? "ok" : "error",
-            d.success
-              ? `SMTP conectado (${d.smtp?.host}:${d.smtp?.port})`
-              : d.message || d.error?.message || "Falha SMTP",
-          );
-        } catch (e) {
-          showMessage("error", e.message);
-        } finally {
-          b.disabled = false;
-          b.innerHTML = o;
-        }
-      }
-      function goToSmtpConfig() {
-        window.location.href = "/envia-curriculo/smtp-config";
-      }
-      function showPreview(d) {
-        document.getElementById("emptyState").style.display = "none";
-        document.getElementById("previewSection").style.display = "block";
-        document.getElementById("successSection").style.display = "none";
-        document.getElementById("actionPanel").style.display = "block";
-        document.getElementById("pdfViewer").src =
-          d.previewUrl || `/temp/${d.curriculoGerado}`;
-        document.getElementById("previewTitle").textContent = d.vaga;
-        document.getElementById("previewSubtitle").textContent =
-          `${d.empresa || "Empresa não informada"} • ${d.emailDestino || "E-mail não identificado"}`;
-        document.getElementById("relevanceBadge").textContent =
-          `⭐ ${d.detalhes.relevancia}`;
-        const eb = d.emailDestino
-          ? ""
-          : `<div class="email-prompt"><label>E-mail de destino</label><input id="manualEmailInput" class="email-input" type="email" autocomplete="email" placeholder="exemplo@empresa.com"/><div id="manualEmailHint" class="email-hint">Informe um e-mail válido.</div></div>`;
-        document.getElementById("actionPanel").innerHTML =
-          `<h4>Próximo passo</h4><p>Revise o currículo. Se estiver satisfeito, autorize o envio.</p>${eb}<div class="btn-actions"><button class="btn btn-ghost btn-sm" onclick="regenerate()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> Refazer</button><button class="btn btn-ghost btn-sm" onclick="downloadPDF()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Baixar PDF</button><button class="btn btn-gold btn-sm" id="sendBtn" onclick="sendEmail()" ${d.emailDestino ? "" : "disabled"}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Enviar</button></div>`;
-        bindManualEmail();
-        document.getElementById("resultsContent").innerHTML =
-          `<div class="results-grid"><div class="result-cell"><strong>Vaga</strong><span>${d.vaga}</span></div><div class="result-cell"><strong>E-mail</strong><span>${d.emailDestino || "Não identificado"}</span></div><div class="result-cell"><strong>Relevância</strong><span style="color:var(--emerald)">${d.detalhes.relevancia}</span></div><div class="result-cell"><strong>Tempo</strong><span>${d.detalhes.tempoProcessamento}</span></div></div><div class="skills-row"><strong>Habilidades</strong>${d.detalhes.habilidadesMatch.map((s) => `<span class="skill-pill">${s}</span>`).join("")}</div>`;
-        document.getElementById("resultsCard").style.display = "block";
-      }
-      function showSuccess(d) {
-        document.getElementById("previewSection").style.display = "none";
-        document.getElementById("successSection").style.display = "block";
-        document.getElementById("sentDetails").textContent =
-          `Enviado para ${d.email.destino} • ID: ${d.email.messageId}`;
-      }
-      function regenerate() {
-        document.getElementById("vagaText").focus();
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      }
-      function downloadPDF() {
-        if (currentPdf) {
-          const a = document.createElement("a");
-          a.href = `/temp/${currentPdf}`;
-          a.download = currentPdf;
-          a.click();
-        }
-      }
-      function resetAll() {
-        document.getElementById("vagaText").value = "";
-        ["resultsCard", "previewSection", "successSection"].forEach(
-          (id) => (document.getElementById(id).style.display = "none"),
-        );
-        document.getElementById("emptyState").style.display = "block";
-        document.getElementById("pdfViewer").src = "";
-        currentPdf = currentEmail = currentVaga = null;
-        updateSteps(1);
-      }
-      function getManualEmail() {
-        const i = document.getElementById("manualEmailInput");
-        if (!i) {
-          showMessage("error", "E-mail não disponível.");
-          return null;
-        }
-        const v = i.value.trim();
-        if (!v) {
-          setManualState(i, "empty");
-          showMessage("error", "Informe o e-mail.");
-          i.focus();
-          return null;
-        }
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) {
-          setManualState(i, "bad");
-          showMessage("error", "E-mail inválido.");
-          i.focus();
-          return null;
-        }
-        setManualState(i, "ok");
-        return v;
-      }
-      function setManualState(i, s) {
-        const h = document.getElementById("manualEmailHint");
-        i.classList.remove("ok", "bad");
-        if (h) h.classList.remove("ok", "bad");
-        const b = document.getElementById("sendBtn");
-        if (b) b.disabled = s !== "ok";
-        if (s === "ok") {
-          i.classList.add("ok");
-          if (h) {
-            h.classList.add("ok");
-            h.textContent = "E-mail válido.";
+          const [curriculoRes, monitorRes] = await Promise.all([
+            fetch('/api/curriculo/status', { credentials: 'include' }),
+            fetch('/api/curriculo/monitor', { credentials: 'include' })
+          ]);
+          
+          const monitorData = await monitorRes.json();
+          if (monitorData.success) {
+            document.getElementById('quick-vagas').textContent = monitorData.total || 0;
+            document.getElementById('quick-enviados').textContent = monitorData.enviados || 0;
           }
-        } else if (s === "bad") {
-          i.classList.add("bad");
-          if (h) {
-            h.classList.add("bad");
-            h.textContent = "Exemplo: nome@empresa.com";
-          }
-        } else {
-          if (h) h.textContent = "Informe um e-mail válido.";
-        }
+        } catch (e) { /* silent */ }
       }
-      function bindManualEmail() {
-        const i = document.getElementById("manualEmailInput");
-        if (!i) {
-          const b = document.getElementById("sendBtn");
-          if (b) b.disabled = false;
+
+      function showMessage(text, type = 'info') {
+        const msgDiv = document.getElementById('messages');
+        const msg = document.createElement('div');
+        msg.className = `msg msg-${type}`;
+        msg.textContent = text;
+        msgDiv.appendChild(msg);
+        setTimeout(() => msg.remove(), 5000);
+      }
+
+      async function gerarCurriculo() {
+        const textarea = document.getElementById('vaga-input');
+        const btn = document.getElementById('generar-btn');
+        const btnText = document.getElementById('btn-text');
+        const loader = document.getElementById('loader');
+        
+        const vagaTexto = textarea.value.trim();
+        if (!vagaTexto) {
+          showMessage('Por favor, cole a descrição da vaga', 'err');
           return;
         }
-        setManualState(i, "empty");
-        i.addEventListener("input", () => {
-          const v = i.value.trim();
-          setManualState(
-            i,
-            !v ? "empty" : /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) ? "ok" : "bad",
-          );
-        });
-      }
-      function updateSteps(n) {
-        for (let i = 1; i <= 3; i++) {
-          const e = document.getElementById(`step${i}`);
-          e.classList.remove("active", "done");
-          if (i < n) e.classList.add("done");
-          else if (i === n) e.classList.add("active");
-        }
-      }
-      function setLoading(v) {
-        document.getElementById("loading").style.display = v ? "block" : "none";
-        document.getElementById("submitBtn").disabled = v;
-      }
-      function showMessage(t, m) {
-        const e = document.getElementById(
-          t === "error" ? "errorMessage" : "successMessage",
-        );
-        e.textContent = m;
-        e.style.display = "block";
-      }
-      function hideMessages() {
-        ["errorMessage", "successMessage"].forEach(
-          (id) => (document.getElementById(id).style.display = "none"),
-        );
-      }
-      document.addEventListener("DOMContentLoaded", () =>
-        document.getElementById("vagaText").focus(),
-      );
-      // ── Busca de Vagas ──
-      async function buscarVagas() {
-        const input = document.getElementById("searchInput");
-        const tags = input.value
-          .trim()
-          .split(",")
-          .map((s) => s.trim())
-          .filter(Boolean);
-        if (!tags.length) {
-          input.focus();
-          return;
-        }
-        const btn = document.getElementById("searchBtn");
+
         btn.disabled = true;
-        btn.textContent = "Buscando…";
-        document.getElementById("searchEmpty").style.display = "none";
-        document.getElementById("searchResults").style.display = "none";
-        document.getElementById("searchLoading").style.display = "block";
+        btnText.style.display = 'none';
+        loader.style.display = 'block';
+        document.getElementById('preview-content').innerHTML = '<div class="loader"><span class="loader-ring"></span><span class="loader-text">Analisando vaga...</span></div>';
+
         try {
-          const r = await fetch("/api/curriculo/buscar-vagas", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            credentials: "include",
-            body: JSON.stringify({ tags, limit: 10 }),
+          const response = await fetch('/api/curriculo/gerar-curriculo', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ vaga: vagaTexto })
           });
-          const d = await r.json();
-          if (!r.ok) throw new Error(d.error || "Erro na busca");
-          renderSearchResults(d);
-        } catch (e) {
-          document.getElementById("searchResults").innerHTML =
-            `<div class="msg msg-err" style="display:block">${e.message}</div>`;
-          document.getElementById("searchResults").style.display = "block";
+          const data = await response.json();
+
+          if (data.success) {
+            currriculoGerado = data;
+            document.getElementById('preview-panel').style.display = 'block';
+            exibirPreview(data);
+            document.getElementById('step-2').classList.add('completed');
+            document.getElementById('step-3').classList.add('active');
+            document.getElementById('auto-apply-btn').style.display = 'inline-block';
+            showMessage(`✅ Currículo gerado com ${data.detalhes.relevancia}% de relevância`, 'ok');
+          } else {
+            showMessage(data.error || 'Erro ao gerar', 'err');
+          }
+        } catch (err) {
+          showMessage('Erro de conexão', 'err');
         } finally {
           btn.disabled = false;
-          btn.innerHTML =
-            '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Buscar';
-          document.getElementById("searchLoading").style.display = "none";
+          btnText.style.display = '';
+          loader.style.display = 'none';
         }
       }
-      function renderSearchResults(d) {
-        const el = document.getElementById("searchResults");
-        if (!d.vagas || !d.vagas.length) {
-          el.innerHTML =
-            '<div class="search-empty"><h3>Nenhuma vaga encontrada</h3><p>Tente outras tags.</p></div>';
-          el.style.display = "block";
+
+      function exibirPreview(data) {
+        const preview = document.getElementById('preview-content');
+        preview.innerHTML = `
+          <div class="preview-meta">
+            <h3>${data.vaga}</h3>
+            <small>Email: ${data.emailDestino || 'Não informado'}</small>
+          </div>
+          <div class="pdf-frame"><iframe src="${data.previewUrl}" title="Preview"></iframe></div>
+          <div class="status-bar">
+            <span>Relevância</span>
+            <span class="status-badge ${data.detalhes.relevancia >= 70 ? 'completed' : 'processing'}">${data.detalhes.relevancia}%</span>
+          </div>
+          <div style="margin-top: 16px;"><button class="btn btn-primary" onclick="abrirEnvio()">📤 Enviar</button></div>
+        `;
+        preview.classList.add('active');
+      }
+
+      function abrirEnvio() {
+        if (!currriculoGerado) return;
+        document.getElementById('vaga-titulo').value = currriculoGerado.vaga;
+        document.getElementById('send-modal').style.display = 'block';
+      }
+
+      function abrirAutoApply() {
+        document.getElementById('auto-apply-modal').style.display = 'block';
+      }
+
+      function fecharAutoApply() {
+        document.getElementById('auto-apply-modal').style.display = 'none';
+        document.getElementById('auto-apply-status').style.display = 'none';
+        document.getElementById('auto-apply-results').style.display = 'none';
+      }
+
+      async function fecharAutoApply() {
+        document.getElementById('auto-apply-modal').style.display = 'none';
+      }
+
+      async function enviarCurriculo() {
+        const email = document.getElementById('email-destino').value;
+        if (!email) {
+          showMessage('Informe o email', 'err');
           return;
         }
-        let html = `<div class="search-summary">${d.total} vagas encontradas • ${d.vagas.filter((v) => v.match.score >= 70).length} com alta compatibilidade</div>`;
-        d.vagas.forEach((v) => {
-          const sc = v.match.score;
-          const cls =
-            sc >= 70 ? "score-high" : sc >= 50 ? "score-mid" : "score-low";
-          html += `<div class="job-card"><div><div class="job-title">${v.title}</div><div class="job-company">${v.company || "Empresa não informada"}</div><div class="job-meta">${v.location ? `<span>📍 ${v.location}</span>` : ""}${v.salary ? `<span>💰 ${v.salary}</span>` : ""}${v.type ? `<span>💼 ${Array.isArray(v.type) ? v.type.join(", ") : v.type}</span>` : ""}${v.postedAt ? `<span>📅 ${new Date(v.postedAt).toLocaleDateString("pt-BR")}</span>` : ""}</div><div class="job-tags">${(
-            v.match.matches || []
-          )
-            .slice(0, 6)
-            .map((m) => `<span class="job-tag">✓ ${m.required}</span>`)
-            .join("")}${(v.match.missing || [])
-            .slice(0, 3)
-            .map(
-              (m) =>
-                `<span class="job-tag" style="border-color:var(--rose);color:var(--rose)">✗ ${m}</span>`,
-            )
-            .join(
-              "",
-            )}</div></div><div class="job-score"><div class="score-circle ${cls}">${sc}%</div><div class="job-actions"><button class="btn btn-ghost btn-sm" onclick="usarVaga('${encodeURIComponent(JSON.stringify({ title: v.title, company: v.company, description: v.description || "" }))}')">Usar</button>${v.url ? `<a class="btn btn-ghost btn-sm" href="${v.url}" target="_blank">Ver</a>` : ""}</div></div></div>`;
-        });
-        el.innerHTML = html;
-        el.style.display = "block";
-      }
-      function usarVaga(encoded) {
-        const v = JSON.parse(decodeURIComponent(encoded));
-        document.getElementById("vagaText").value =
-          `Vaga: ${v.title}\nEmpresa: ${v.company}\n\n${v.description || ""}`;
-        document.getElementById("vagaText").focus();
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      }
-      // ── Scheduler Monitor ──
-      async function schedulerStatus() {
+
+        const btn = document.querySelector('#send_modal button.btn-primary');
+        btn.disabled = true;
+        btn.textContent = 'Enviando...';
+
         try {
-          const r = await fetch("/api/curriculo/buscar-vagas/scheduler", { credentials: "include" });
-          const d = await r.json();
-          const dot = document.getElementById("monitorDot");
-          const txt = document.getElementById("monitorText");
-          const toggle = document.getElementById("schedulerToggle");
-          if (d.rodando) {
-            dot.className = "monitor-dot on";
-            txt.textContent = "Rodando 24/7 • Buscando vagas a cada hora";
-            toggle.textContent = "Parar";
+          const response = await fetch('/api/curriculo/enviar-curriculo', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+              nomeArquivo: currriculoGerado.curriculoGerado,
+              emailDestino: email,
+              vagaTitulo: currriculoGerado.vaga
+            })
+          });
+          const data = await response.json();
+          if (data.success) {
+            showMessage(`✅ Enviado para ${email}`, 'ok');
+            closeModal();
           } else {
-            dot.className = "monitor-dot off";
-            txt.textContent = "Parado";
-            toggle.textContent = "Iniciar";
+            showMessage(data.error || 'Erro ao enviar', 'err');
           }
-          if (d.ultimaExecucao) {
-            const u = d.ultimaExecucao;
-            document.getElementById("monTotal").textContent = u.total || 0;
-            document.getElementById("monCompat").textContent = u.compatveis || 0;
-            document.getElementById("monEnv").textContent = u.enviados || 0;
-            document.getElementById("monErro").textContent = u.erros || 0;
-          }
-        } catch (e) { console.error(e); }
+        } catch (err) {
+          showMessage('Erro de conexão', 'err');
+        } finally {
+          if (btn) btn.disabled = false;
+        }
       }
-      async function toggleScheduler() {
-        const btn = document.getElementById("schedulerToggle");
-        const isRunning = btn.textContent === "Parar";
-        try {
-          await fetch(`/api/curriculo/buscar-vagas/scheduler/${isRunning ? "stop" : "start"}`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            credentials: "include",
-            body: isRunning ? "{}" : JSON.stringify({ minScore: 60, autoSend: true })
-          });
-          setTimeout(schedulerStatus, 500);
-        } catch (e) { console.error(e); }
+
+      function closeModal() {
+        document.getElementById('send_modal').style.display = 'none';
       }
-      async function schedulerRunNow() {
-        const btn = event.target; btn.disabled = true; btn.textContent = "Executando…";
-        try {
-          const r = await fetch("/api/curriculo/buscar-vagas/scheduler/run", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            credentials: "include",
-            body: JSON.stringify({ minScore: 60, autoSend: true })
-          });
-          const d = await r.json();
-          if (d.ok && d.resumo) {
-            alert(`Executado!\nTotal: ${d.resumo.total}\nCompatíveis: ${d.resumo.compatveis}\nEnviados: ${d.resumo.enviados}`);
-          }
-          schedulerStatus();
-        } catch (e) { alert("Erro: " + e.message); }
-        finally { btn.disabled = false; btn.textContent = "Executar Agora"; }
-      }
-      // ── LinkedIn Parser ──
-      async function parseLinkedIn() {
-        const html = document.getElementById("linkedinHtml").value.trim();
-        if (!html) { alert("Cole o HTML primeiro"); return; }
-        const el = document.getElementById("linkedinResults");
-        el.innerHTML = '<div class="loader" style="display:block"><div class="loader-ring"></div><div class="loader-text">Parseando…</div></div>';
-        try {
-          const r = await fetch("/api/curriculo/buscar-vagas/linkedin", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            credentials: "include",
-            body: JSON.stringify({ html })
-          });
-          const d = await r.json();
-          if (!d.ok) throw new Error(d.error);
-          if (!d.vagas.length) { el.innerHTML = '<p style="color:var(--ink-muted);font-size:13px">Nenhuma vaga com email encontrada no HTML.</p>'; return; }
-          let h = `<div class="search-summary">${d.vagas.length} vagas extraídas do LinkedIn</div>`;
-          d.vagas.forEach(v => {
-            const sc = v.match.score; const cls = sc >= 70 ? "score-high" : sc >= 50 ? "score-mid" : "score-low";
-            const emails = (v._emails || []).join(", ");
-            h += `<div class="job-card"><div><div class="job-title">${v.title}</div><div class="job-company">${v.company||"LinkedIn"}</div><div class="job-meta">${v.location?`<span>📍 ${v.location}</span>`:""}${emails?`<span>📧 ${emails}</span>`:""}</div></div><div class="job-score"><div class="score-circle ${cls}">${sc}%</div><div class="job-actions"><button class="btn btn-ghost btn-sm" onclick="usarVaga('${encodeURIComponent(JSON.stringify({title:v.title,company:v.company,description:v.description||""}))}')">Usar</button></div></div></div>`;
-          });
-          el.innerHTML = h;
-        } catch (e) { el.innerHTML = `<div class="msg msg-err" style="display:block">${e.message}</div>`; }
-      }
-      // Auto-load scheduler status
-      document.addEventListener("DOMContentLoaded", () => { schedulerStatus(); });
+
+      // Inicializar
+      carregarQuickStats();
+      setInterval(carregarQuickStats, 30000);
     </script>
   </body>
 </html>

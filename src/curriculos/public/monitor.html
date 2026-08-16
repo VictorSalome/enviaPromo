@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Monitoramento - Currículos</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Source+Sans+3:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/style.css">
+  </head>
+  <body>
+    <div class="masthead">
+      <div class="header-content">
+        <h1>📊 <span>Monitoramento de Candidaturas</span></h1>
+        <p class="masthead-sub">Estatísticas em tempo real e histórico de envios</p>
+      </div>
+    </div>
+
+    <main class="workspace">
+      <div class="main-grid">
+        <!-- Stats Cards -->
+        <div class="panel" style="grid-column: span 1;">
+          <div class="panel-body">
+            <h3 style="margin-bottom: 16px;">📈 Métricas Gerais</h3>
+            
+            <div id="stats-grid" class="grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 24px;">
+              <div class="stat-card" style="background: linear-gradient(135deg, #f5f3ef 0%, #fff 100%); border-radius: 12px; padding: 20px; text-align: center;">
+                <div id="stat-total" style="font-size: 32px; font-weight: 700; color: var(--ink);">0</div>
+                <div style="font-size: 13px; color: var(--ink-muted);">📋 Total de Vagas Encontradas</div>
+              </div>
+              <div class="stat-card" style="background: linear-gradient(135deg, #e8f5f0 0%, #fff 100%); border-radius: 12px; padding: 20px; text-align: center;">
+                <div id="stat-enviados" style="font-size: 32px; font-weight: 700; color: var(--success);">0</div>
+                <div style="font-size: 13px; color: var(--ink-muted);">📧 E-mails Enviados</div>
+              </div>
+              <div class="stat-card" style="background: linear-gradient(135deg, #fff7ed 0%, #fff 100%); border-radius: 12px; padding: 20px; text-align: center;">
+                <div id="stat-erro" style="font-size: 32px; font-weight: 700; color: var(--danger);">0</div>
+                <div style="font-size: 13px; color: var(--ink-muted);">⚠️ Erros</div>
+              </div>
+              <div class="stat-card" style="background: linear-gradient(135deg, #e8f0fe 0%, #fff 100%); border-radius: 12px; padding: 20px; text-align: center;">
+                <div id="stat-media" style="font-size: 32px; font-weight: 700; color: var(--primary);">0ms</div>
+                <div style="font-size: 13px; color: var(--ink-muted);">⏱️ Tempo Médio</div>
+              </div>
+            </div>
+
+            <div style="margin-top: 24px;">
+              <button class="btn btn-primary" id="refresh-btn" onclick="carregarDados()">🔄 Atualizar Estatísticas</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Auto-Apply Controls -->
+        <div class="panel" style="grid-column: span 1;">
+          <div class="panel-head">
+            <div class="icon">🤖</div>
+            <h2>Auto-Apply</h2>
+          </div>
+          <div class="panel-body">
+            <p style="margin-bottom: 16px; color: var(--ink-muted);">
+              Execute candidaturas automáticas. Configure os filtros e clique em "Iniciar Auto-Apply".
+            </p>
+
+            <div style="margin-bottom: 16px;">
+              <label style="display: block; margin-bottom: 8px; font-size: 13px; font-weight: 500;">
+                Palavras-chave (separadas por vírgula)
+              </label>
+              <input type="text" id="keywords-input" class="email-input" 
+                     placeholder="ex: react, nodejs, typescript" 
+                     value="react, javascript, typescript, node.js" />
+            </div>
+
+            <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+              <input type="text" id="min-score" type="number" min="0" max="100" value="60" 
+                     style="flex: 1; padding: 10px; border: 1.5px solid var(--cream); border-radius: var(--radius); font-family: inherit;" />
+              <span style="align-self: flex-end; color: var(--ink-muted); font-size: 13px;">Score mínimo</span>
+            </div>
+
+            <div style="display: flex; gap: 12px; margin-bottom: 16px;">
+              <button class="btn btn-primary" onclick="iniciarAutoApply()" id="start-btn">
+                ▶️ Iniciar Auto-Apply
+              </button>
+              <button class="btn btn-ghost" onclick="pararAutoApply()" id="stop-btn" style="display: none;">
+                ⏹️ Parar
+              </button>
+            </div>
+
+            <div id="auto-apply-status" style="padding: 12px; border-radius: var(--radius); font-size: 14px; display: none;">
+              <div id="status-text">Processando...</div>
+            </div>
+
+            <div id="auto-apply-results" style="margin-top: 20px; display: none;">
+              <h4 style="font-size: 14px; margin-bottom: 12px;">📊 Resultados</h4>
+              
+              <div id="results-stats" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 16px;">
+                <div style="background: var(--paper-warm); padding: 12px; border-radius: var(--radius); text-align: center;">
+                  <div id="result-compativeis" style="font-size: 24px; font-weight: 600; color: var(--primary);">0</div>
+                  <div style="font-size: 11px; color: var(--ink-muted);">Compatíveis</div>
+                </div>
+                <div style="background: var(--paper-warm); padding: 12px; border-radius: var(--radius); text-align: center;">
+                  <div id="result-encontrados" style="font-size: 24px; font-weight: 600; color: var(--success);">0</div>
+                  <div style="font-size: 11px; color: var(--ink-muted);">Encontrados</div>
+                </div>
+              </div>
+
+              <div id="results-list" style="max-height: 300px; overflow-y: auto; border: 1px solid var(--cream); border-radius: var(--radius);">
+                <!-- Lista de vagas -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      let autoApplyInterval = null;
+      let dadosAnteriores = { total: 0, enviados: 0, erros: 0 };
+
+      async function carregarDados() {
+        try {
+          const response = await fetch('/api/curriculo/monitor', {
+            credentials: 'include'
+          });
+          const data = await response.json();
+          
+          if (data.success) {
+            document.getElementById('stat-total').textContent = data.total || 0;
+            document.getElementById('stat-enviados').textContent = data.enviados || 0;
+            document.getElementById('stat-erro').textContent = data.erros || 0;
+            document.getElementById('stat-media').textContent = data.tempoMedio || '0ms';
+          }
+        } catch (err) {
+          console.log('Erro ao carregar dados');
+        }
+      }
+
+      async function iniciarAutoApply() {
+        const keywords = document.getElementById('keywords-input').value;
+        const minScore = document.getElementById('min-score').value;
+        
+        document.getElementById('start-btn').style.display = 'none';
+        document.getElementById('stop-btn').style.display = 'inline-block';
+        document.getElementById('auto-apply-status').style.display = 'flex';
+        document.getElementById('auto-apply-results').style.display = 'block';
+
+        // Executar auto-apply
+        try {
+          const response = await fetch('/api/curriculo/auto-apply', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+              query: keywords,
+              minScore: parseInt(minScore),
+              limit: 5,
+              autoSend: true
+            })
+          });
+
+          const data = await response.json();
+          
+          if (data.success) {
+            document.getElementById('result-compativeis').textContent = data.resumo?.compativeis || 0;
+            document.getElementById('result-encontrados').textContent = data.resumo?.total || 0;
+            
+            // Listar vagas
+            const listEl = document.getElementById('results-list');
+            if (data.vagas && data.vagas.length > 0) {
+              listEl.innerHTML = data.vagas.map(v => `
+                <div style="padding: 12px; border-bottom: 1px solid var(--cream);">
+                  <strong style="display: block; margin-bottom: 4px;">${v.title}</strong>
+                  <div style="font-size: 12px; color: var(--ink-muted);">
+                    ${v.company} • ${v.location || 'Remoto'} • Score: ${v.match?.score || 0}%
+                  </div>
+                  <button class="btn btn-sm btn-ghost" style="margin-top: 8px;" onclick="verDetalhes(${JSON.stringify(v).replace(/"/g, '&quot;')})">
+                    Ver detalhes
+                  </button>
+                </div>
+              `).join('');
+            } else {
+              listEl.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--ink-muted);">Nenhuma vaga compatível encontrada</div>';
+            }
+          }
+        } catch (err) {
+          document.getElementById('status-text').textContent = 'Erro ao executar auto-apply';
+        } finally {
+          document.getElementById('start-btn').style.display = 'inline-block';
+          document.getElementById('stop-btn').style.display = 'none';
+        }
+      }
+
+      function pararAutoApply() {
+        document.getElementById('start-btn').style.display = 'inline-block';
+        document.getElementById('stop-btn').style.display = 'none';
+        document.getElementById('auto-apply-status').style.display = 'none';
+      }
+
+      // Carregar dados inicialmente
+      carregarDados();
+      
+      // Atualizar a cada 10 segundos
+      setInterval(carregarDados, 10000);
+    </script>
+  </body>
+</html>
