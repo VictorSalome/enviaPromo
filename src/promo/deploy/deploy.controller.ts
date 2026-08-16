@@ -66,15 +66,12 @@ export const triggerDeploy = async (
     // 2. Copiar dist (aplicacao compilada)
     run("cd ~/enviaPromo && rm -rf dist && cp -r deploy/dist dist");
 
-    // 3. Copiar public (ficheiros estaticos)
-    run("cd ~/enviaPromo && cp -r deploy/public/* public/");
-
-    // 4. Instalar dependencias de producao
+    // 3. Instalar dependencias de producao
     run(
       "cd ~/enviaPromo && (pnpm install --prod --frozen-lockfile 2>/dev/null || npm install --production)",
     );
 
-    // 5. Restart SEMPRE no final, mesmo se passos anteriores falharam
+    // 4. Restart SEMPRE no final, mesmo se passos anteriores falharam
     run("pm2 restart promo-monitor && pm2 save");
 
     console.log("✅ Deploy concluido!");
